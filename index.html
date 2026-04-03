@@ -1,1 +1,1843 @@
-<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=TheOnlineDhikrTracker.html"><title>Dhikr Tracker</title></head><body></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2d6a4f" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Dhikr Tracker" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Dhikr Tracker</title>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Amiri:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    html,body { height:100%; }
+    body { font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif; transition:background 0.3s ease,color 0.3s ease; }
+    input:focus { outline:none; }
+    @keyframes fadeUp    { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+    @keyframes scaleIn   { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+    @keyframes slideDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes toastIn   { from{opacity:0;transform:translate(-50%,12px)} to{opacity:1;transform:translate(-50%,0)} }
+    @keyframes celebOverlayIn{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+    @keyframes celebTextIn{0%{opacity:0;transform:translate(-50%,-50%) scale(0.6)}18%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}28%{transform:translate(-50%,-50%) scale(1)}75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0.9)}}
+    @keyframes celebRingGrow{0%{r:0;opacity:0.9}60%{r:260;opacity:0}100%{r:260;opacity:0}}
+    @keyframes celebRingGrow2{0%{r:0;opacity:0.6}80%{r:340;opacity:0}100%{r:340;opacity:0}}
+    @keyframes celebRingGrow3{0%{r:0;opacity:0.4}95%{r:420;opacity:0}100%{r:420;opacity:0}}
+    @keyframes celebGlowPulse{0%,100%{opacity:0.5}50%{opacity:1}}
+    .celeb-overlay{position:fixed;inset:0;z-index:9999;pointer-events:none;animation:celebOverlayIn 2.8s ease forwards;}
+    .celeb-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;z-index:0;}
+    .celeb-text-wrap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;animation:celebTextIn 2.8s cubic-bezier(0.34,1.56,0.64,1) forwards;background:rgba(0,0,0,0.42);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:24px;padding:28px 44px 24px;border:1px solid rgba(255,255,255,0.2);box-shadow:0 12px 60px rgba(0,0,0,0.4);min-width:280px;max-width:min(540px,88vw);z-index:10;}
+    .celeb-arabic{font-family:'Amiri',Georgia,serif;font-size:clamp(38px,7vw,66px);font-weight:700;line-height:1.5;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,0.8);direction:rtl;display:block;margin-bottom:4px;}
+    .celeb-divider{width:48px;height:1.5px;background:rgba(255,255,255,0.3);border-radius:2px;margin:4px auto 10px;}
+    .celeb-transliteration{font-family:'Inter',sans-serif;font-size:clamp(14px,2.2vw,18px);font-weight:700;letter-spacing:1.5px;color:#fff;text-shadow:0 1px 10px rgba(0,0,0,0.6);margin-bottom:3px;}
+    .celeb-translation{font-family:'Lora',Georgia,serif;font-size:clamp(11px,1.8vw,14px);font-style:italic;color:rgba(255,255,255,0.75);text-shadow:0 1px 6px rgba(0,0,0,0.5);margin-bottom:12px;}
+    .celeb-label{font-family:'Inter',sans-serif;font-size:clamp(10px,1.6vw,12px);font-weight:700;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:2px;}
+    .celeb-cycles{font-family:'Inter',sans-serif;font-size:clamp(10px,1.6vw,12px);font-weight:500;color:rgba(255,255,255,0.4);margin-top:3px;}
+    .scrollbar-light::-webkit-scrollbar{width:6px}
+    .scrollbar-light::-webkit-scrollbar-track{background:transparent}
+    .scrollbar-light::-webkit-scrollbar-thumb{background:#d5cdc4;border-radius:3px}
+    .scrollbar-dark::-webkit-scrollbar{width:6px}
+    .scrollbar-dark::-webkit-scrollbar-track{background:transparent}
+    .scrollbar-dark::-webkit-scrollbar-thumb{background:#3a3530;border-radius:3px}
+    /* iOS performance */
+    *{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;}
+    body{-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
+    button{touch-action:manipulation;cursor:pointer;}
+    input{-webkit-appearance:none;}
+    .tab-content{will-change:contents;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<noscript style="display:block;padding:40px;font-family:sans-serif;font-size:18px;text-align:center;color:#5a4a3a">JavaScript is required to run the Dhikr Tracker.</noscript>
+<script>
+
+/* ─────────────────────── STORAGE ──────────────────────────── */
+const SK       = "dhikr_tracker";
+const OLD_KEYS = ["dhikr_v5","dhikr_v4","dhikr_v3","dhikr_v2","dhikr_v1"];
+
+const DEFS = {
+  name:"",
+  counts:  { subhanallah:0, alhamdulillah:0, allahuakbar:0, astaghfirullah:0, lailahaillallah:0, lahaula:0, subhanallahiwabihamdihi:0, allahummaajirniminarnar:0 },
+  targets: { subhanallah:33, alhamdulillah:33, allahuakbar:33, astaghfirullah:33, lailahaillallah:33, lahaula:33, subhanallahiwabihamdihi:33, allahummaajirniminarnar:33 },
+  totalSession:0,
+  isDark:false,
+};
+
+function load() {
+  try {
+    let raw = localStorage.getItem(SK);
+    if (!raw) { for (const k of OLD_KEYS) { raw = localStorage.getItem(k); if (raw) break; } }
+    if (!raw) return DEFS;
+    const saved = JSON.parse(raw);
+    return { ...DEFS, ...saved, counts: { ...DEFS.counts, ...(saved.counts||{}) }, targets: { ...DEFS.targets, ...(saved.targets||{}) } };
+  } catch { return DEFS; }
+}
+function save(s) {
+  try { localStorage.setItem(SK, JSON.stringify(s)); OLD_KEYS.forEach(k=>{try{localStorage.removeItem(k);}catch{}}); } catch {}
+}
+
+/* ─────────────────────── DHIKR LIST ──────────────────────── */
+const DHIKR_LIST = [
+  { id:"subhanallah",     arabic:"سُبْحَانَ اللَّهِ",              transliteration:"SubhanAllah",                 translation:"Glory be to Allah",              color:"#2d6a4f", light:"#d8f3dc", mid:"#95d5b2", accent:"#40916c" },
+  { id:"alhamdulillah",   arabic:"الْحَمْدُ لِلَّهِ",              transliteration:"Alhamdulillah",               translation:"Praise be to Allah",             color:"#1d3461", light:"#cfe2ff", mid:"#90b4f0", accent:"#3d6fcc" },
+  { id:"allahuakbar",     arabic:"اللَّهُ أَكْبَرُ",               transliteration:"Allahu Akbar",                translation:"Allah is the Greatest",          color:"#7b2d00", light:"#fde8d8", mid:"#f0b48a", accent:"#c8612a" },
+  { id:"astaghfirullah",  arabic:"أَسْتَغْفِرُ اللَّهَ",           transliteration:"Astaghfirullah",              translation:"I seek forgiveness from Allah",  color:"#4a0e6b", light:"#edd9ff", mid:"#c79deb", accent:"#8b44c2" },
+  { id:"lailahaillallah", arabic:"لَا إِلَهَ إِلَّا اللَّهُ",     transliteration:"La Ilaha Illallah",           translation:"There is no god but Allah",      color:"#704800", light:"#fdefd0", mid:"#f5c96a", accent:"#c89018" },
+  { id:"lahaula",         arabic:"لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", transliteration:"La Hawla wa la Quwwata Illa Billah", translation:"There is no power except with Allah", color:"#074a52", light:"#b8ecf0", mid:"#58c8d4", accent:"#0a9098" },
+  { id:"subhanallahiwabihamdihi", arabic:"سُبْحَانَ اللَّهِ وَبِحَمْدِهِ", transliteration:"SubhanAllahi wa Bihamdihi", translation:"Glory and praise be to Allah", color:"#3d405b", light:"#dde0f5", mid:"#a0a6d6", accent:"#6670c0" },
+  { id:"allahummaajirniminarnar", arabic:"اللَّهُمَّ أَجِرْنِي مِنَ النَّارِ", transliteration:"Allahumma Ajirni Minan Nar", translation:"O Allah, protect me from the Fire", color:"#7a1c1c", light:"#fde0d0", mid:"#f5a080", accent:"#d44a2a" },
+];
+const TARGET_OPTIONS = [33, 34, 100];
+
+/* ─────────────────────── THEMES ───────────────────────────── */
+const mkTheme = dark => ({
+  dark,
+  bg:          dark ? "#111009"   : "#f5f1eb",
+  surface:     dark ? "#1c1916"   : "#ffffff",
+  surface2:    dark ? "#242018"   : "#faf8f5",
+  border:      dark ? "#2e2924"   : "#ece8e2",
+  border2:     dark ? "#3a3428"   : "#e0dbd4",
+  text:        dark ? "#f0ebe0"   : "#1c1812",
+  textSub:     dark ? "#cfc0a0"   : "#5a4a3a",
+  textMuted:   dark ? "#a09080"   : "#a89888",
+  textFaint:   dark ? "#706458"   : "#c8c0b8",
+  inputBg:     dark ? "#201d18"   : "#faf8f5",
+  kbdBg:       dark ? "#242018"   : "#f5f2ed",
+  scrollClass: dark ? "scrollbar-dark" : "scrollbar-light",
+  hadithBg:    dark ? "#1c1916"   : "#ffffff",
+  hadithQuote: dark ? "#52b788"   : "#2d6a4f",
+  divider:     dark ? "#2e2924"   : "#e8e4de",
+  toastBg:     dark ? "#ede8de"   : "#1c1812",
+  toastText:   dark ? "#1c1812"   : "#ede8de",
+  resetBg:     dark ? "#2a1612"   : "#fff8f8",
+  resetBorder: dark ? "#4a2018"   : "#ffd0d0",
+  resetText:   dark ? "#e06858"   : "#c0392b",
+  toggleTrack: dark ? "#3e3830"   : "#e0dbd4",
+  toggleActive:"#40916c",
+});
+
+/* ─────────────────────── HADITH ────────────────────────────── */
+const HADITH = [
+  { t:"Actions are judged by intentions, and every person shall have what they intended.", s:"Sahih al-Bukhari 1; Sahih Muslim 1907" },
+  { t:"None of you truly believes until he loves for his brother what he loves for himself.", s:"Sahih al-Bukhari 13; Sahih Muslim 45" },
+  { t:"The best of you are those who have the best manners and character.", s:"Sahih al-Bukhari 3559" },
+  { t:"The strong person is not the one who overcomes others by force, but the one who controls themselves while in anger.", s:"Sahih al-Bukhari 6114; Sahih Muslim 2609" },
+  { t:"Whoever believes in Allah and the Last Day, let them speak good or remain silent.", s:"Sahih al-Bukhari 6018; Sahih Muslim 47" },
+  { t:"Cleanliness is half of faith.", s:"Sahih Muslim 223" },
+  { t:"The most beloved deeds to Allah are those done consistently, even if they are few.", s:"Sahih al-Bukhari 6465; Sahih Muslim 783" },
+  { t:"Make things easy and do not make them difficult; give glad tidings and do not drive people away.", s:"Sahih al-Bukhari 69; Sahih Muslim 1734" },
+  { t:"A good word is charity.", s:"Sahih al-Bukhari 2989; Sahih Muslim 1009" },
+  { t:"Smiling at your brother is an act of charity.", s:"Jami at-Tirmidhi 1956 (Sahih)" },
+  { t:"The best among you are those who are best to their wives.", s:"Jami at-Tirmidhi 3895 (Sahih)" },
+  { t:"Allah is Kind and loves kindness in all matters.", s:"Sahih al-Bukhari 6024; Sahih Muslim 2593" },
+  { t:"He who does not thank people does not thank Allah.", s:"Sunan Abu Dawud 4811 (Sahih)" },
+  { t:"Be in this world as though you were a stranger or a traveler along a path.", s:"Sahih al-Bukhari 6416" },
+  { t:"The best of you are those who learn the Quran and teach it.", s:"Sahih al-Bukhari 5027" },
+  { t:"Every act of goodness is charity.", s:"Sahih Muslim 1005" },
+  { t:"Do not get angry — and Paradise is yours.", s:"Sahih al-Bukhari 6116 (related hadith)" },
+  { t:"Whoever believes in Allah and the Last Day, let them honour their guest.", s:"Sahih al-Bukhari 6018; Sahih Muslim 48" },
+  { t:"The seeking of knowledge is obligatory upon every Muslim.", s:"Sunan Ibn Majah 224 (Sahih)" },
+  { t:"Allah does not look at your forms and wealth, but He looks at your hearts and deeds.", s:"Sahih Muslim 2564" },
+  { t:"Feed the hungry, visit the sick, and free the captive.", s:"Sahih al-Bukhari 5373" },
+  { t:"The merciful are shown mercy by the All-Merciful. Have mercy on those on the earth and He who is in the heaven will have mercy on you.", s:"Sunan Abu Dawud 4941 (Sahih)" },
+  { t:"Modesty is part of faith.", s:"Sahih al-Bukhari 24; Sahih Muslim 37" },
+  { t:"Allah loves that when any of you does a task, he does it with excellence.", s:"Al-Mu'jam al-Awsat (Sahih li ghayrihi)" },
+  { t:"Truthfulness leads to righteousness and righteousness leads to Paradise.", s:"Sahih al-Bukhari 6094; Sahih Muslim 2607" },
+  { t:"The greatest jihad is to battle your own soul, to fight the evil within yourself.", s:"Related in Sunan al-Darimi (Hasan)" },
+  { t:"A man follows the religion of his friend, so let each of you consider whom he makes his friend.", s:"Sunan Abu Dawud 4833; Jami at-Tirmidhi 2378 (Hasan)" },
+  { t:"When one of you prays, he is conversing with his Lord, so let him consider what he says.", s:"Musnad Ahmad (Sahih)" },
+  { t:"The closest a servant comes to his Lord is when he is in prostration, so supplicate much therein.", s:"Sahih Muslim 482" },
+  { t:"Charity does not diminish wealth.", s:"Sahih Muslim 2588" },
+  { t:"Whoever is not merciful to others will not be treated mercifully.", s:"Sahih al-Bukhari 6013" },
+  { t:"The believer is a mirror to his fellow believer.", s:"Sunan Abu Dawud 4918 (Hasan)" },
+  { t:"Do not consider any act of goodness as insignificant, even meeting your brother with a cheerful face.", s:"Sahih Muslim 2626" },
+  { t:"A Muslim is one from whose tongue and hand other Muslims are safe.", s:"Sahih al-Bukhari 10; Sahih Muslim 41" },
+  { t:"The most excellent words after the Quran are four: SubhanAllah, Alhamdulillah, La ilaha illallah, Allahu Akbar.", s:"Sahih Muslim 2137" },
+  { t:"Whoever guards what is between his jaws and what is between his legs, I guarantee him Paradise.", s:"Jami at-Tirmidhi 2408 (Sahih)" },
+  { t:"When you stand up to pray, pray as if it were your last prayer.", s:"Sunan Ibn Majah 4171 (Sahih)" },
+  { t:"Whoever wakes up safely in his home, healthy in his body, with his daily provision — it is as if the entire world was gathered for him.", s:"Jami at-Tirmidhi 2346 (Hasan)" },
+  { t:"I and the one who looks after an orphan will be in Paradise together like this — and he pointed with his index and middle fingers.", s:"Sahih al-Bukhari 6005" },
+  { t:"Whoever goes out seeking knowledge, Allah will make easy for him the path to Paradise.", s:"Sahih Muslim 2699" },
+];
+
+function getDayOfYear() {
+  const n=new Date(), s=new Date(n.getFullYear(),0,0);
+  return Math.floor((n-s+(s.getTimezoneOffset()-n.getTimezoneOffset())*60000)/86400000);
+}
+const todaysHadith = () => HADITH[getDayOfYear() % HADITH.length];
+
+/* ─────────────────────── QURAN VERSES ─────────────────────── */
+const QURAN_VERSES = [
+  { a:"إِنَّ مَعَ الْعُسْرِ يُسْرًا",                                           t:"Indeed, with hardship comes ease.",                                        r:"Surah Ash-Sharh 94:6" },
+  { a:"وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ",                                      t:"And He is with you wherever you are.",                                     r:"Surah Al-Hadid 57:4" },
+  { a:"إِنَّ اللَّهَ مَعَ الصَّابِرِينَ",                                         t:"Indeed, Allah is with the patient.",                                       r:"Surah Al-Baqarah 2:153" },
+  { a:"وَلَا تَيْأَسُوا مِن رَّوْحِ اللَّهِ",                                     t:"Do not despair of relief from Allah.",                                     r:"Surah Yusuf 12:87" },
+  { a:"وَاللَّهُ يُحِبُّ الصَّابِرِينَ",                                          t:"And Allah loves the steadfast.",                                           r:"Surah Al-Imran 3:146" },
+  { a:"حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",                                    t:"Sufficient for us is Allah, the best Disposer of affairs.",                 r:"Surah Al-Imran 3:173" },
+  { a:"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ",                              t:"Verily, in the remembrance of Allah do hearts find rest.",                  r:"Surah Ar-Ra'd 13:28" },
+  { a:"وَلَذِكْرُ اللَّهِ أَكْبَرُ",                                               t:"And the remembrance of Allah is greatest.",                                r:"Surah Al-Ankabut 29:45" },
+  { a:"فَاذْكُرُونِي أَذْكُرْكُمْ",                                               t:"So remember Me; I will remember you.",                                     r:"Surah Al-Baqarah 2:152" },
+  { a:"وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا",                             t:"Whoever fears Allah, He will make for him a way out.",                     r:"Surah At-Talaq 65:2" },
+  { a:"وَمَا تَوْفِيقِي إِلَّا بِاللَّهِ",                                         t:"And my success is not but through Allah.",                                 r:"Surah Hud 11:88" },
+  { a:"رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً",           t:"Our Lord, give us good in this world and in the Hereafter.",                r:"Surah Al-Baqarah 2:201" },
+  { a:"وَقُل رَّبِّ زِدْنِي عِلْمًا",                                              t:"And say: My Lord, increase me in knowledge.",                              r:"Surah Ta-Ha 20:114" },
+  { a:"اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ",                                   t:"Allah is the Light of the heavens and the earth.",                         r:"Surah An-Nur 24:35" },
+  { a:"إِنَّ اللَّهَ لَا يُغَيِّرُ مَا بِقَوْمٍ حَتَّىٰ يُغَيِّرُوا مَا بِأَنفُسِهِمْ", t:"Allah will not change the condition of a people until they change themselves.", r:"Surah Ar-Ra'd 13:11" },
+  { a:"يَا أَيُّهَا الَّذِينَ آمَنُوا اذْكُرُوا اللَّهَ ذِكْرًا كَثِيرًا",           t:"O you who believe! Remember Allah with much remembrance.",                 r:"Surah Al-Ahzab 33:41" },
+  { a:"وَهُوَ الْغَفُورُ الْوَدُودُ",                                              t:"And He is the Forgiving, the Affectionate.",                               r:"Surah Al-Buruj 85:14" },
+  { a:"وَكَفَىٰ بِاللَّهِ شَهِيدًا",                                               t:"And sufficient is Allah as a witness.",                                    r:"Surah Al-Fath 48:28" },
+  { a:"وَعَسَىٰ أَن تَكْرَهُوا شَيْئًا وَهُوَ خَيْرٌ لَّكُمْ",                      t:"It may be that you dislike something while it is good for you.",            r:"Surah Al-Baqarah 2:216" },
+  { a:"وَاللَّهُ خَيْرٌ وَأَبْقَىٰ",                                               t:"And Allah is better and more lasting.",                                    r:"Surah Ta-Ha 20:73" },
+  { a:"إِنَّ اللَّهَ مَعَ الَّذِينَ اتَّقَوا",                                      t:"Indeed, Allah is with those who fear Him.",                                r:"Surah An-Nahl 16:128" },
+  { a:"رَبِّ اغْفِرْ وَارْحَمْ وَأَنتَ خَيْرُ الرَّاحِمِينَ",                       t:"My Lord, forgive and have mercy, You are the best of the merciful.",       r:"Surah Al-Mu'minun 23:118" },
+  { a:"وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ",                                    t:"And seek help through patience and prayer.",                               r:"Surah Al-Baqarah 2:45" },
+  { a:"إِنَّ اللَّهَ غَفُورٌ رَّحِيمٌ",                                             t:"Indeed, Allah is Forgiving and Merciful.",                                 r:"Surah Al-Baqarah 2:173" },
+  { a:"وَكَانَ اللَّهُ بِكُلِّ شَيْءٍ عَلِيمًا",                                    t:"And Allah is ever, of all things, Knowing.",                               r:"Surah Al-Ahzab 33:40" },
+];
+const todaysVerse = () => QURAN_VERSES[getDayOfYear() % QURAN_VERSES.length];
+
+/* ─────────────────────── ISLAMIC DATE ─────────────────────── */
+function getIslamicDate(date) {
+  if (!date) date = new Date();
+  const jd = Math.floor((date.getTime() / 86400000) + 2440587.5);
+  const l = jd - 1948440 + 10632, n = Math.floor((l - 1) / 10631);
+  const ll = l - 10631 * n + 354;
+  const j = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719)
+          + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
+  const ll2 = ll - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50)
+            - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
+  const mo = Math.floor((24 * ll2) / 709), day = ll2 - Math.floor((709 * mo) / 24), year = 30 * n + j - 30;
+  const EN = ["Muharram","Safar","Rabi' al-Awwal","Rabi' al-Thani","Jumada al-Awwal","Jumada al-Thani","Rajab","Sha'ban","Ramadan","Shawwal","Dhu al-Qi'dah","Dhu al-Hijjah"];
+  return { day, month: EN[mo - 1], year };
+}
+
+/* ─────────────────────── PRAYER TIMES ─────────────────────── */
+function toRad(d) { return d * Math.PI / 180; }
+function toDeg(r) { return r * 180 / Math.PI; }
+
+function calcPrayerTimes(date, lat, lng, method, shadowFactor) {
+  if (!shadowFactor) shadowFactor = 1;
+  const METHODS = { MWL:{fa:18,ia:17}, ISNA:{fa:15,ia:15}, Egypt:{fa:19.5,ia:17.5}, Makkah:{fa:18.5,im:90}, Karachi:{fa:18,ia:18} };
+  const m = METHODS[method] || METHODS.MWL;
+
+  // Days since J2000.0 — use exact timestamp, not floored
+  const D = date.getTime() / 86400000 + 2440587.5 - 2451545.0;
+
+  // Sun mean longitude, mean anomaly, equation of center
+  const L0 = (280.46646 + 0.9856474 * D) % 360;
+  const M0 = (357.52911 + 0.9856003 * D) % 360;
+  const C  = (1.9146 - 0.004817*(D/36525)) * Math.sin(toRad(M0))
+           + 0.019993 * Math.sin(toRad(2*M0))
+           + 0.00029  * Math.sin(toRad(3*M0));
+  const lsun = (L0 + C) % 360;
+
+  // Obliquity and declination
+  const obliq  = 23.439291111 - 0.013004167 * (D / 36525);
+  const sinDec = Math.sin(toRad(obliq)) * Math.sin(toRad(lsun));
+  const dec    = toDeg(Math.asin(sinDec));
+
+  // Right ascension (hours) and Equation of Time (hours)
+  const RA  = ((toDeg(Math.atan2(Math.cos(toRad(obliq)) * Math.sin(toRad(lsun)), Math.cos(toRad(lsun)))) / 15) + 24) % 24;
+  const EqT = ((L0 / 15 - RA) + 12) % 24 - 12;
+
+  // Solar noon in UTC hours
+  const noonUTC = 12 - EqT - lng / 15;
+
+  // Hour angle → UTC time
+  const ha = (angleDeg, dir) => {
+    const cosH = (Math.sin(toRad(angleDeg)) - Math.sin(toRad(lat)) * sinDec)
+               / (Math.cos(toRad(lat)) * Math.cos(Math.asin(sinDec)));
+    if (Math.abs(cosH) > 1) return null;
+    const H = toDeg(Math.acos(cosH)) / 15;
+    return dir === "rise" ? noonUTC - H : noonUTC + H;
+  };
+
+  // Asr: shadow factor 1 = Shafi'i/Maliki/Hanbali, 2 = Hanafi
+  const asrUTC = (shadowFactor) => {
+    const tgt  = Math.atan(1 / (shadowFactor + Math.tan(toRad(Math.abs(lat - dec)))));
+    const cosH = (Math.sin(tgt) - Math.sin(toRad(lat)) * sinDec)
+               / (Math.cos(toRad(lat)) * Math.cos(Math.asin(sinDec)));
+    if (Math.abs(cosH) > 1) return null;
+    return noonUTC + toDeg(Math.acos(cosH)) / 15;
+  };
+
+  // UTC → device local time
+  const tzOff  = -date.getTimezoneOffset() / 60;
+  const toLocal = h => h == null ? null : ((h + tzOff) % 24 + 24) % 24;
+  const fmt = h => {
+    if (h == null) return "--:--";
+    const tot = Math.round(h * 60), hh = Math.floor(tot / 60) % 24, mm = tot % 60;
+    return (hh % 12 || 12) + ":" + (mm < 10 ? "0" : "") + mm + (hh >= 12 ? " PM" : " AM");
+  };
+
+  const fajr    = ha(-m.fa,  "rise");
+  const sunrise = ha(-0.833, "rise");
+  const dhuhr   = noonUTC + 0.017;
+  const asr     = asrUTC(shadowFactor);
+  const maghrib = ha(-0.833, "set");
+  const isha    = m.im ? (maghrib != null ? maghrib + m.im / 60 : null) : ha(-m.ia, "set");
+
+  const mk = (id, name, ar, icon, raw) => ({ id, name, arabic: ar, icon, raw: toLocal(raw), formatted: fmt(toLocal(raw)) });
+  return [
+    mk("fajr",    "Fajr",    "الفجر",           "🌙", fajr),
+    mk("sunrise", "Sunrise", "الشروق",      "🌅", sunrise),
+    mk("dhuhr",   "Dhuhr",   "الظهر",           "☀️", dhuhr),
+    mk("asr",     "Asr",     "العصر",           "🌤️", asr),
+    mk("maghrib", "Maghrib", "المغرب",      "🌇", maghrib),
+    mk("isha",    "Isha",    "العشاء",      "🌃", isha),
+  ];
+}
+
+function getCurrentPrayer(times) {
+  const nowH = new Date().getHours() + new Date().getMinutes() / 60;
+  const ps = times.filter(t => t.id !== "sunrise" && t.raw != null);
+  let cur = null;
+  for (const p of ps) { if (p.raw <= nowH) cur = p.id; }
+  return cur || "isha";
+}
+function getNextPrayer(times) {
+  const nowH = new Date().getHours() + new Date().getMinutes() / 60;
+  const ps = times.filter(t => t.id !== "sunrise" && t.raw != null);
+  for (const p of ps) { if (p.raw > nowH) return p; }
+  return ps[0];
+}
+function fmtCountdown(tH) {
+  const n = new Date(), nowH = n.getHours() + n.getMinutes() / 60 + n.getSeconds() / 3600;
+  let d = tH - nowH; if (d < 0) d += 24;
+  const ts = Math.round(d * 3600), h = Math.floor(ts / 3600), m = Math.floor((ts % 3600) / 60), s = ts % 60;
+  return h > 0 ? h + "h " + (m < 10 ? "0" : "") + m + "m" : m + "m " + (s < 10 ? "0" : "") + s + "s";
+}
+
+/* ─────────────────────── COMPONENTS ──────────────────────── */
+
+
+/* ─────────────────────── 99 NAMES OF ALLAH ───────────────── */
+const NAMES_OF_ALLAH = [
+  { n:1,  ar:"الرَّحْمٰن",           en:"Ar-Rahman",           meaning:"The Most Gracious",                    },
+  { n:2,  ar:"الرَّحِيمْ",           en:"Ar-Rahim",            meaning:"The Most Merciful",                    },
+  { n:3,  ar:"المَلِكُ",                       en:"Al-Malik",            meaning:"The King, The Sovereign",              },
+  { n:4,  ar:"القُدُّوسُ",           en:"Al-Quddus",           meaning:"The Most Holy",                        },
+  { n:5,  ar:"السَّلَامُ",           en:"As-Salam",            meaning:"The Source of Peace",                  },
+  { n:6,  ar:"المُؤْمِنُ",           en:"Al-Mu'min",           meaning:"The Granter of Security",              },
+  { n:7,  ar:"المُهَيْمِنُ",en:"Al-Muhaymin",        meaning:"The Guardian, The Witness",            },
+  { n:8,  ar:"العَزِيزُ",                 en:"Al-Aziz",             meaning:"The Almighty",                         },
+  { n:9,  ar:"الجَبَّارُ",           en:"Al-Jabbar",           meaning:"The Compeller",                        },
+  { n:10, ar:"المُتَكَبِّرُ",en:"Al-Mutakabbir",meaning:"The Majestic",                        },
+  { n:11, ar:"الخَالِقُ",                 en:"Al-Khaliq",           meaning:"The Creator",                          },
+  { n:12, ar:"البَارِىءُ",           en:"Al-Bari'",            meaning:"The Originator",                       },
+  { n:13, ar:"المُصَوِّرُ",     en:"Al-Musawwir",         meaning:"The Fashioner of Forms",               },
+  { n:14, ar:"الغَفَّارُ",           en:"Al-Ghaffar",          meaning:"The Ever-Forgiving",                   },
+  { n:15, ar:"القَهَّارُ",           en:"Al-Qahhar",           meaning:"The Subduer",                          },
+  { n:16, ar:"الوَهَّابُ",           en:"Al-Wahhab",           meaning:"The Bestower",                         },
+  { n:17, ar:"الرَّزَّاقُ",     en:"Ar-Razzaq",           meaning:"The Provider",                         },
+  { n:18, ar:"الفَتَّاحُ",           en:"Al-Fattah",           meaning:"The Opener",                           },
+  { n:19, ar:"العَلِيمُ",                 en:"Al-'Alim",            meaning:"The All-Knowing",                      },
+  { n:20, ar:"القَابِضُ",                 en:"Al-Qabid",            meaning:"The Withholder",                       },
+  { n:21, ar:"البَاسِطُ",                 en:"Al-Basit",            meaning:"The Expander",                         },
+  { n:22, ar:"الخَافِضُ",                 en:"Al-Khafid",           meaning:"The Abaser",                           },
+  { n:23, ar:"الرَّافِعُ",           en:"Ar-Rafi'",            meaning:"The Exalter",                          },
+  { n:24, ar:"المُعِزُّ",                 en:"Al-Mu'izz",           meaning:"The Honourer",                         },
+  { n:25, ar:"المُذِلُّ",                 en:"Al-Mudhill",          meaning:"The Dishonorer",                       },
+  { n:26, ar:"السَمِيعُ",                 en:"As-Sami'",            meaning:"The All-Hearing",                      },
+  { n:27, ar:"البَصِيرُ",                 en:"Al-Basir",            meaning:"The All-Seeing",                       },
+  { n:28, ar:"الحَكَمُ",                       en:"Al-Hakam",            meaning:"The Judge",                            },
+  { n:29, ar:"العَدْلُ",                       en:"Al-'Adl",             meaning:"The Just",                             },
+  { n:30, ar:"اللَّطِيفُ",           en:"Al-Latif",            meaning:"The Subtle One",                       },
+  { n:31, ar:"الخَبِيرُ",                 en:"Al-Khabir",           meaning:"The All-Aware",                        },
+  { n:32, ar:"الحَلِيمُ",                 en:"Al-Halim",            meaning:"The Forbearing",                       },
+  { n:33, ar:"العَظِيمُ",                 en:"Al-'Azim",            meaning:"The Magnificent",                      },
+  { n:34, ar:"الغَفُورُ",                 en:"Al-Ghafur",           meaning:"The Forgiving",                        },
+  { n:35, ar:"الشَّكُورُ",           en:"Ash-Shakur",          meaning:"The Appreciative",                     },
+  { n:36, ar:"العَلِيُّ",                 en:"Al-'Ali",             meaning:"The Most High",                        },
+  { n:37, ar:"الكَبِيرُ",                 en:"Al-Kabir",            meaning:"The Greatest",                         },
+  { n:38, ar:"الحَفِيظُ",                 en:"Al-Hafiz",            meaning:"The Preserver",                        },
+  { n:39, ar:"المُقِيتُ",                 en:"Al-Muqit",            meaning:"The Nourisher",                        },
+  { n:40, ar:"الحَسِيبُ",                 en:"Al-Hasib",            meaning:"The Reckoner",                         },
+  { n:41, ar:"الجَلِيلُ",                 en:"Al-Jalil",            meaning:"The Majestic",                         },
+  { n:42, ar:"الكَرِيمُ",                 en:"Al-Karim",            meaning:"The Generous",                         },
+  { n:43, ar:"الرَّقِيبُ",           en:"Ar-Raqib",            meaning:"The Watchful",                         },
+  { n:44, ar:"المُجِيبُ",                 en:"Al-Mujib",            meaning:"The Responsive",                       },
+  { n:45, ar:"الوَاسِعُ",                 en:"Al-Wasi'",            meaning:"The All-Encompassing",                 },
+  { n:46, ar:"الحَكِيمُ",                 en:"Al-Hakim",            meaning:"The Wise",                             },
+  { n:47, ar:"الوَدُودُ",                 en:"Al-Wadud",            meaning:"The Loving",                           },
+  { n:48, ar:"المَجِيدُ",                 en:"Al-Majid",            meaning:"The Glorious",                         },
+  { n:49, ar:"البَاعِثُ",                 en:"Al-Ba'ith",           meaning:"The Resurrector",                      },
+  { n:50, ar:"الشَّهِيدُ",           en:"Ash-Shahid",          meaning:"The Witness",                          },
+  { n:51, ar:"الحَقُّ",                             en:"Al-Haqq",             meaning:"The Truth",                            },
+  { n:52, ar:"الوَكِيلُ",                 en:"Al-Wakil",            meaning:"The Trustee",                          },
+  { n:53, ar:"القَوِيُّ",                 en:"Al-Qawi",             meaning:"The Most Strong",                      },
+  { n:54, ar:"المَتِينُ",                 en:"Al-Matin",            meaning:"The Firm",                             },
+  { n:55, ar:"الوَلِيُّ",                 en:"Al-Wali",             meaning:"The Protecting Friend",                },
+  { n:56, ar:"الحَمِيدُ",                 en:"Al-Hamid",            meaning:"The Praiseworthy",                     },
+  { n:57, ar:"المُحْصِيْ", en:"Al-Muhsi", meaning:"The Counter of All" },
+  { n:58, ar:"المُبْدِىءُ",     en:"Al-Mubdi'",           meaning:"The Originator",                       },
+  { n:59, ar:"المُعِيدُ",                 en:"Al-Mu'id",            meaning:"The Restorer",                         },
+  { n:60, ar:"المُحْيِيْ",           en:"Al-Muhyi",            meaning:"The Giver of Life",                    },
+  { n:61, ar:"المُمِيتُ",                 en:"Al-Mumit",            meaning:"The Taker of Life",                    },
+  { n:62, ar:"الحَيُّ",                             en:"Al-Hayy",             meaning:"The Ever-Living",                      },
+  { n:63, ar:"القَيُّومُ",           en:"Al-Qayyum",           meaning:"The Self-Subsisting",                  },
+  { n:64, ar:"الوَاجِدُ",                 en:"Al-Wajid",            meaning:"The Finder",                           },
+  { n:65, ar:"المَاجِدُ",                 en:"Al-Majid",            meaning:"The Noble",                            },
+  { n:66, ar:"الوَاحِدُ",                 en:"Al-Wahid",            meaning:"The One",                              },
+  { n:67, ar:"الأَحَدُ",                       en:"Al-Ahad",             meaning:"The Unique",                           },
+  { n:68, ar:"الصَّمَدُ",                 en:"As-Samad",            meaning:"The Eternal",                          },
+  { n:69, ar:"القَادِرُ",                 en:"Al-Qadir",            meaning:"The Able",                             },
+  { n:70, ar:"المُقْتَدِرُ",en:"Al-Muqtadir",        meaning:"The Powerful",                         },
+  { n:71, ar:"المُقَدِّمُ",     en:"Al-Muqaddim",         meaning:"The Expediter",                        },
+  { n:72, ar:"المُؤَخِّرُ",     en:"Al-Mu'akhkhir",       meaning:"The Delayer",                          },
+  { n:73, ar:"الأَوَّلُ",                 en:"Al-Awwal",            meaning:"The First",                            },
+  { n:74, ar:"الآخِرُ",                             en:"Al-Akhir",            meaning:"The Last",                             },
+  { n:75, ar:"الظَّاهِرُ",           en:"Az-Zahir",            meaning:"The Manifest",                         },
+  { n:76, ar:"البَاطِنُ",                 en:"Al-Batin",            meaning:"The Hidden",                           },
+  { n:77, ar:"الوَالِيْ",                 en:"Al-Wali",             meaning:"The Governor",                         },
+  { n:78, ar:"المُتَعَالِيْ",en:"Al-Muta'ali",  meaning:"The Most Exalted",                     },
+  { n:79, ar:"البَرُّ",                             en:"Al-Barr",             meaning:"The Source of All Good",               },
+  { n:80, ar:"التَّوَّابُ",     en:"At-Tawwab",           meaning:"The Ever-Returning",                   },
+  { n:81, ar:"المُنتَقِمُ",     en:"Al-Muntaqim",         meaning:"The Avenger",                          },
+  { n:82, ar:"العَفُوُّ",                 en:"Al-'Afuw",            meaning:"The Pardoner",                         },
+  { n:83, ar:"الرَّؤُوفُ",           en:"Ar-Ra'uf",            meaning:"The Compassionate",                    },
+  { n:84, ar:"مَالِكُ المُلْكِ", en:"Malik Al-Mulk", meaning:"The Owner of All Sovereignty" },
+  { n:85, ar:"ذُو الجَلَالِ وَالْإِكْرَامِ", en:"Dhul-Jalali wal-Ikram", meaning:"Lord of Majesty and Bounty" },
+  { n:86, ar:"المُقْسِطُ",           en:"Al-Muqsit",           meaning:"The Equitable",                        },
+  { n:87, ar:"الجَامِعُ",                 en:"Al-Jami'",            meaning:"The Gatherer",                         },
+  { n:88, ar:"الغَنِيُّ",                 en:"Al-Ghani",            meaning:"The Self-Sufficient",                  },
+  { n:89, ar:"المُغْنِيْ",           en:"Al-Mughni",           meaning:"The Enricher",                         },
+  { n:90, ar:"المَانِعُ",                 en:"Al-Mani'",            meaning:"The Preventer",                        },
+  { n:91, ar:"الضَّارُّ",                 en:"Ad-Darr",             meaning:"The Distresser",                       },
+  { n:92, ar:"النَّافِعُ",           en:"An-Nafi'",            meaning:"The Propitious",                       },
+  { n:93, ar:"النُّورُ",                       en:"An-Nur",              meaning:"The Light",                            },
+  { n:94, ar:"الهَادِيْ",                 en:"Al-Hadi",             meaning:"The Guide",                            },
+  { n:95, ar:"البَدِيعُ",                 en:"Al-Badi'",            meaning:"The Incomparable",                     },
+  { n:96, ar:"البَاقِيْ",                 en:"Al-Baqi",             meaning:"The Everlasting",                      },
+  { n:97, ar:"الوَارِثُ",                 en:"Al-Warith",           meaning:"The Inheritor",                        },
+  { n:98, ar:"الرَّشِيدُ",           en:"Ar-Rashid",           meaning:"The Guide to the Right Path",          },
+  { n:99, ar:"الصَّبُورُ",           en:"As-Sabur",            meaning:"The Patient",                          },
+];
+
+/* ─────────────────────── DU'A COLLECTION ───────────────────── */
+const DUA_CATEGORIES = ["All","Morning","Evening","Protection","Forgiveness","Gratitude","Hardship","Travel","Food","Sleep"];
+
+const DUAS = [
+  { id:1, cat:"Morning",
+    ar:"أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ",
+    tr:"Asbahna wa asbahal mulku lillah, walhamdu lillah, la ilaha illallahu wahdahu la sharika lah",
+    en:"We have reached the morning and the whole kingdom belongs to Allah. All praise is for Allah. There is no god but Allah, alone with no partners.",
+    source:"Sunan Abu Dawud 5078" },
+
+  { id:2, cat:"Morning",
+    ar:"اللَّهُمَّ بِكَ أَصْبَحْنَا وَبِكَ أَمْسَيْنَا، وَبِكَ نَحْيَا وَبِكَ نَمُوتُ، وَإِلَيْكَ النُّشُورُ",
+    tr:"Allahumma bika asbahna wa bika amsayna, wa bika nahya wa bika namutu, wa ilayka an-nushur",
+    en:"O Allah, by You we enter the morning and by You we enter the evening, by You we live and by You we die, and to You is the resurrection.",
+    source:"Sunan Abu Dawud 5068" },
+
+  { id:3, cat:"Morning",
+    ar:"أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+    tr:"A'udhu bikalimatillahit-tammati min sharri ma khalaq",
+    en:"I seek refuge in the perfect words of Allah from the evil of what He has created.",
+    source:"Sahih Muslim 2708" },
+
+  { id:4, cat:"Evening",
+    ar:"أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ",
+    tr:"Amsayna wa amsal mulku lillah, walhamdu lillah, la ilaha illallahu wahdahu la sharika lah",
+    en:"We have entered the evening and the whole kingdom belongs to Allah. All praise is for Allah. There is no god but Allah, alone with no partners.",
+    source:"Sunan Abu Dawud 5078" },
+
+  { id:5, cat:"Evening",
+    ar:"اللَّهُمَّ بِكَ أَمْسَيْنَا وَبِكَ أَصْبَحْنَا، وَبِكَ نَحْيَا وَبِكَ نَمُوتُ، وَإِلَيْكَ الْمَصِيرُ",
+    tr:"Allahumma bika amsayna wa bika asbahna, wa bika nahya wa bika namutu, wa ilayka al-masir",
+    en:"O Allah, by You we enter the evening and by You we enter the morning, by You we live and by You we die, and to You is the final destination.",
+    source:"Sunan Abu Dawud 5068" },
+
+  { id:6, cat:"Protection",
+    ar:"بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+    tr:"Bismillahil-ladhi la yadurru ma'asmihi shay'un fil-ardi wa la fis-sama'i wa huwas-sami'ul-'alim",
+    en:"In the name of Allah, with whose name nothing is harmed on earth or in the heavens, and He is the All-Hearing, the All-Knowing.",
+    source:"Sunan Abu Dawud 5088 (Sahih)" },
+
+  { id:7, cat:"Protection",
+    ar:"اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَافِيَةَ فِي الدُّنْيَا وَالْآخِرَةِ",
+    tr:"Allahumma inni as'alukal-'afiyata fid-dunya wal-akhirah",
+    en:"O Allah, I ask You for well-being in this world and the Hereafter.",
+    source:"Sunan Ibn Majah 3871 (Sahih)" },
+
+  { id:8, cat:"Protection",
+    ar:"حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ",
+    tr:"Hasbunallahu wa ni'mal wakil",
+    en:"Allah is sufficient for us, and He is the best Disposer of affairs.",
+    source:"Surah Al-Imran 3:173" },
+
+  { id:9, cat:"Forgiveness",
+    ar:"اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ، وَأَبُوءُ لَكَ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+    tr:"Allahumma anta rabbi la ilaha illa anta, khalaqtani wa ana 'abduka, wa ana 'ala 'ahdika wa wa'dika mastata'tu, a'udhu bika min sharri ma sana'tu, abu'u laka bini'matika 'alayya, wa abu'u laka bidhanbi faghfir li fa'innahu la yaghfirudh-dhunuba illa anta",
+    en:"O Allah, You are my Lord, there is no god but You. You created me and I am Your servant. I am upon Your covenant and promise as best I can. I seek refuge in You from the evil of what I have done. I acknowledge Your blessings upon me and I acknowledge my sins, so forgive me, for none forgives sins but You.",
+    source:"Sahih al-Bukhari 6306 — Sayyid al-Istighfar" },
+
+  { id:10, cat:"Forgiveness",
+    ar:"رَبَّنَا ظَلَمْنَا أَنْفُسَنَا وَإِنْ لَمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ",
+    tr:"Rabbana zalamna anfusana wa in lam taghfir lana wa tarhamna lanakunanna minal-khasirin",
+    en:"Our Lord, we have wronged ourselves, and if You do not forgive us and have mercy on us, we will surely be among the losers.",
+    source:"Surah Al-A'raf 7:23 — Du'a of Adam and Hawwa" },
+
+  { id:11, cat:"Forgiveness",
+    ar:"رَبِّ اغْفِرْ وَارْحَمْ وَأَنْتَ خَيْرُ الرَّاحِمِينَ",
+    tr:"Rabbigh-fir warham wa anta khayrur-rahimin",
+    en:"My Lord, forgive and have mercy, for You are the best of those who show mercy.",
+    source:"Surah Al-Mu'minun 23:118" },
+
+  { id:12, cat:"Gratitude",
+    ar:"الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ",
+    tr:"Alhamdu lillahil-ladhi ahyyana ba'da ma amatana wa ilayhin-nushur",
+    en:"All praise is for Allah who gave us life after causing us to die, and to Him is the resurrection.",
+    source:"Sahih al-Bukhari 6314 — Upon waking" },
+
+  { id:13, cat:"Gratitude",
+    ar:"اللَّهُمَّ لَكَ الْحَمْدُ أَنْتَ كَسَوْتَنِي هَذَا وَرَزَقْتَنِيهِ مِنْ غَيْرِ حَوْلٍ مِنِّي وَلَا قُوَّةٍ",
+    tr:"Allahumma lakal-hamdu anta kasawtani hadha wa razaqtanihi min ghayri hawlin minni wa la quwwah",
+    en:"O Allah, to You belongs all praise. You have clothed me with this and provided it for me without any might or power on my part.",
+    source:"Sunan Abu Dawud 4023 (Hasan) — Upon dressing" },
+
+  { id:14, cat:"Gratitude",
+    ar:"رَبِّ أَوْزِعْنِي أَنْ أَشْكُرَ نِعْمَتَكَ الَّتِي أَنْعَمْتَ عَلَيَّ وَعَلَى وَالِدَيَّ وَأَنْ أَعْمَلَ صَالِحًا تَرْضَاهُ",
+    tr:"Rabbi awzi'ni an ashkura ni'matakallati an'amta 'alayya wa 'ala walidayya wa an a'mala salihan tardah",
+    en:"My Lord, inspire me to be grateful for Your blessings which You have bestowed upon me and my parents, and to do good deeds that please You.",
+    source:"Surah An-Naml 27:19" },
+
+  { id:15, cat:"Hardship",
+    ar:"لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ",
+    tr:"La ilaha illa anta subhanaka inni kuntu minaz-zalimin",
+    en:"There is no god but You, glory be to You, indeed I have been among the wrongdoers.",
+    source:"Surah Al-Anbiya 21:87 — Du'a of Yunus — Sahih Muslim 2730" },
+
+  { id:16, cat:"Hardship",
+    ar:"اللَّهُمَّ رَحْمَتَكَ أَرْجُو، فَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ، وَأَصْلِحْ لِي شَأْنِي كُلَّهُ",
+    tr:"Allahumma rahmataka arju, fala takilni ila nafsi tarfata 'ayn, wa aslih li sha'ni kullahu",
+    en:"O Allah, I hope for Your mercy. Do not leave me to myself for even the blink of an eye, and rectify all of my affairs.",
+    source:"Sunan Abu Dawud 5090 (Sahih)" },
+
+  { id:17, cat:"Hardship",
+    ar:"إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ، اللَّهُمَّ أْجُرْنِي فِي مُصِيبَتِي وَأَخْلِفْ لِي خَيْرًا مِنْهَا",
+    tr:"Inna lillahi wa inna ilayhi raji'un. Allahumma ajurni fi musibati wa akhlif li khayran minha",
+    en:"Indeed we belong to Allah and to Him we shall return. O Allah, reward me in my calamity and replace it for me with something better.",
+    source:"Sahih Muslim 918 — Upon calamity" },
+
+  { id:18, cat:"Travel",
+    ar:"سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ، وَإِنَّا إِلَى رَبِّنَا لَمُنْقَلِبُونَ",
+    tr:"Subhanalladhi sakhkhara lana hadha wa ma kunna lahu muqrinin, wa inna ila rabbina lamunqalibun",
+    en:"Glory be to the One who has subjected this to us, and we were not able to do so ourselves. And indeed, to our Lord we will return.",
+    source:"Surah Az-Zukhruf 43:13-14 — Upon riding / travelling" },
+
+  { id:19, cat:"Travel",
+    ar:"اللَّهُمَّ هَوِّنْ عَلَيْنَا سَفَرَنَا هَذَا وَاطْوِ عَنَّا بُعْدَهُ",
+    tr:"Allahumma hawwin 'alayna safarana hadha watwi 'anna bu'dah",
+    en:"O Allah, make this journey easy for us and shorten the distance for us.",
+    source:"Sahih Muslim 1342" },
+
+  { id:20, cat:"Food",
+    ar:"بِسْمِ اللَّهِ",
+    tr:"Bismillah",
+    en:"In the name of Allah.",
+    source:"Sahih al-Bukhari 5376 — Before eating" },
+
+  { id:21, cat:"Food",
+    ar:"الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مِنَ الْمُسْلِمِينَ",
+    tr:"Alhamdu lillahil-ladhi at'amana wa saqana wa ja'alana minal-muslimin",
+    en:"All praise is for Allah who fed us, gave us drink, and made us Muslims.",
+    source:"Sunan Abu Dawud 3850 (Hasan) — After eating" },
+
+  { id:22, cat:"Sleep",
+    ar:"بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+    tr:"Bismika Allahumma amutu wa ahya",
+    en:"In Your name, O Allah, I die and I live.",
+    source:"Sahih al-Bukhari 6312 — Before sleeping" },
+
+  { id:23, cat:"Sleep",
+    ar:"اللَّهُمَّ قِنِي عَذَابَكَ يَوْمَ تَبْعَثُ عِبَادَكَ",
+    tr:"Allahumma qini 'adhabaka yawma tab'athu 'ibadak",
+    en:"O Allah, protect me from Your punishment on the day You resurrect Your servants.",
+    source:"Sunan Abu Dawud 5045 (Sahih) — Before sleeping" },
+
+  { id:24, cat:"Sleep",
+    ar:"بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ، فَإِنْ أَمْسَكْتَ نَفْسِي فَاغْفِرْ لَهَا، وَإِنْ أَرْسَلْتَهَا فَاحْفَظْهَا بِمَا تَحْفَظُ بِهِ عِبَادَكَ الصَّالِحِينَ",
+    tr:"Bismika rabbi wada'tu janbi, wa bika arfa'uhu, fa in amsakta nafsi faghfir laha, wa in arsaltaha fahfazha bima tahfazu bihi 'ibadakas-salihin",
+    en:"In Your name, my Lord, I lay down my side, and by You I raise it. If You take my soul, forgive it. And if You release it, protect it as You protect Your righteous servants.",
+    source:"Sahih al-Bukhari 6320 — Before sleeping" },
+];
+
+const PSK = "dhikr_prayer_settings";
+function loadPS() { try { const r=localStorage.getItem(PSK); return r?JSON.parse(r):null; } catch{return null;} }
+function savePS(s) { try { localStorage.setItem(PSK,JSON.stringify(s)); } catch{} }
+
+</script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useCallback, useRef, useMemo, memo } = React;
+
+function Toggle({ on, onChange, th }) {
+  return (
+    <div onClick={()=>onChange(!on)} style={{ width:44, height:24, borderRadius:12, background:on?th.toggleActive:th.toggleTrack, cursor:"pointer", position:"relative", transition:"background 0.25s", flexShrink:0 }}>
+      <div style={{ position:"absolute", top:3, left:on?23:3, width:18, height:18, borderRadius:"50%", background:"white", transition:"left 0.22s cubic-bezier(0.34,1.56,0.64,1)", boxShadow:"0 1px 5px rgba(0,0,0,0.25)" }}/>
+    </div>
+  );
+}
+
+function CircularProgress({ count, target, accent, th }) {
+  const r=60, stroke=6, nr=r-stroke/2;
+  const circ=2*Math.PI*nr, offset=circ-Math.min(count/target,1)*circ;
+  return (
+    <svg width={r*2} height={r*2} style={{ transform:"rotate(-90deg)", flexShrink:0 }}>
+      <circle stroke={th.border2} fill="transparent" strokeWidth={stroke} r={nr} cx={r} cy={r}/>
+      <circle stroke={accent} fill="transparent" strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={`${circ} ${circ}`} strokeDashoffset={offset}
+        r={nr} cx={r} cy={r} style={{ transition:"stroke-dashoffset 0.35s ease" }}/>
+    </svg>
+  );
+}
+
+const DhikrCard = memo(function DhikrCard({ dhikr, count, target, onTap, onReset, onTargetChange, isActive, onClick, th, isMobile }) {
+  const [ripple, setRipple] = useState(false);
+  const [pulse,  setPulse]  = useState(false);
+  const cycles  = Math.floor(count/target);
+  const display = count%target===0 && count>0 ? target : count%target;
+
+  const handleTap = e => {
+    e.stopPropagation();
+    setRipple(true); setPulse(true);
+    setTimeout(()=>setRipple(false),300);
+    setTimeout(()=>setPulse(false),140);
+    onTap();
+  };
+
+  const inactiveBg     = th.surface;
+  const inactiveBorder = th.dark ? `${dhikr.accent}30` : dhikr.light;
+  const arabicCol      = isActive ? "rgba(255,255,255,0.96)" : (th.dark ? dhikr.accent : dhikr.color);
+  const transCol       = isActive ? "rgba(255,255,255,0.68)" : (th.dark ? dhikr.accent : dhikr.accent);
+  const tranlCol       = isActive ? "rgba(255,255,255,0.45)" : th.textMuted;
+  const blobBg         = isActive ? "rgba(255,255,255,0.07)" : (th.dark ? `${dhikr.accent}12` : `${dhikr.light}60`);
+  const tapBtnBg       = isActive ? "rgba(255,255,255,0.17)" : (th.dark ? `${dhikr.accent}22` : dhikr.light);
+  const tapBtnShadow   = isActive ? "0 4px 20px rgba(0,0,0,0.2)" : `0 4px 14px ${th.dark?`${dhikr.accent}18`:`${dhikr.mid}80`}`;
+
+  return (
+    <div onClick={onClick} style={{
+      background: isActive ? `linear-gradient(145deg, ${dhikr.color} 0%, ${dhikr.accent} 100%)` : inactiveBg,
+      borderRadius:20, padding:isMobile?"20px 18px 16px":"28px 26px 22px", cursor:"pointer",
+      boxShadow: isActive ? `0 16px 48px ${dhikr.color}45` : (th.dark?"0 1px 0 rgba(255,255,255,0.03)":"0 1px 12px rgba(0,0,0,0.05)"),
+      border: isActive ? "none" : `1.5px solid ${inactiveBorder}`,
+      transition:"all 0.32s cubic-bezier(0.34,1.56,0.64,1)",
+      transform: isActive ? "translateY(-2px) scale(1.01)" : "none",
+      position:"relative", overflow:"hidden", userSelect:"none",
+    }}>
+      <div style={{ position:"absolute", top:-30, right:-30, width:120, height:120, borderRadius:"50%", background:blobBg, pointerEvents:"none" }}/>
+      <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:22, textAlign:"center", color:arabicCol, marginBottom:2, lineHeight:1.5, fontWeight:700, direction:"rtl" }}>
+        {dhikr.arabic}
+      </div>
+      <div style={{ textAlign:"center", fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:transCol, marginBottom:1 }}>
+        {dhikr.transliteration}
+      </div>
+      <div style={{ textAlign:"center", fontSize:10, fontStyle:"italic", color:tranlCol, marginBottom:18 }}>
+        {dhikr.translation}
+      </div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:22 }}>
+        <div style={{ position:"relative" }}>
+          <CircularProgress count={count} target={target} accent={isActive?"rgba(255,255,255,0.85)":dhikr.accent} th={th}/>
+          <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+            <div style={{ fontSize:24, fontWeight:800, color:isActive?"white":(th.dark?dhikr.accent:dhikr.color), lineHeight:1, transform:pulse?"scale(1.22)":"scale(1)", transition:"transform 0.14s ease" }}>
+              {display}
+            </div>
+            <div style={{ fontSize:9, color:isActive?"rgba(255,255,255,0.5)":th.textFaint, fontWeight:600, letterSpacing:0.5 }}>
+              / {target}
+            </div>
+          </div>
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:"center" }}>
+          <button onClick={handleTap} style={{ width:52, height:52, borderRadius:"50%", border:"none", background:tapBtnBg, color:isActive?"white":(th.dark?dhikr.accent:dhikr.color), fontSize:26, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transform:ripple?"scale(0.85)":"scale(1)", transition:"transform 0.1s ease", boxShadow:tapBtnShadow, fontFamily:"inherit", lineHeight:1 }}>
+            +
+          </button>
+          <button onClick={e=>{e.stopPropagation();onReset();}} style={{ width:52, height:21, borderRadius:11, border:"none", background:isActive?"rgba(255,255,255,0.11)":(th.dark?`${dhikr.accent}14`:th.surface2), color:isActive?"rgba(255,255,255,0.6)":(th.dark?`${dhikr.accent}90`:th.textFaint), fontSize:9, cursor:"pointer", letterSpacing:1, fontWeight:700, fontFamily:"inherit", transition:"all 0.18s", opacity:count===0?0.3:1 }}>
+            RESET
+          </button>
+        </div>
+      </div>
+      <div style={{ marginTop:16, display:"flex", alignItems:"center", gap:5, justifyContent:"center" }} onClick={e=>e.stopPropagation()}>
+        <span style={{ fontSize:9, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:isActive?"rgba(255,255,255,0.38)":th.textFaint, marginRight:2 }}>Target</span>
+        {TARGET_OPTIONS.map(t=>(
+          <button key={t} onClick={e=>{e.stopPropagation();onTargetChange(t);}} style={{ padding:"3px 9px", borderRadius:20, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.17s",
+            border: target===t ? "none" : (isActive?"1.5px solid rgba(255,255,255,0.2)":(th.dark?`1.5px solid ${dhikr.accent}38`:`1.5px solid ${dhikr.light}`)),
+            background: target===t ? (isActive?"rgba(255,255,255,0.2)":(th.dark?dhikr.accent:dhikr.color)) : "transparent",
+            color: target===t ? "white" : (isActive?"rgba(255,255,255,0.5)":(th.dark?dhikr.accent:dhikr.color)),
+          }}>{t}</button>
+        ))}
+      </div>
+      {cycles>0 && (
+        <div style={{ marginTop:8, textAlign:"center", fontSize:10, fontWeight:600, color:isActive?"rgba(255,255,255,0.6)":(th.dark?dhikr.accent:dhikr.accent), letterSpacing:0.3 }}>
+          {cycles} {cycles===1?"cycle":"cycles"} complete
+        </div>
+      )}
+    </div>
+  );
+});
+
+function NameSetup({ onDone, th, isMobile }) {
+  const [val, setVal] = useState("");
+  const ref = useRef();
+  useEffect(()=>{ setTimeout(()=>ref.current?.focus(),350); },[]);
+  const submit = () => { const n=val.trim(); if(!n) return; onDone(n[0].toUpperCase()+n.slice(1)); };
+  return (
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:isMobile?20:24, animation:"fadeIn 0.5s ease" }}>
+      <div style={{ background:th.surface, borderRadius:isMobile?20:28, padding:isMobile?"36px 24px":"52px 44px", width:"100%", maxWidth:420, boxShadow:th.dark?"0 24px 80px rgba(0,0,0,0.4)":"0 24px 80px rgba(44,36,22,0.10)", border:`1.5px solid ${th.border}`, animation:"scaleIn 0.4s ease", textAlign:"center" }}>
+        <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:42, color:"#40916c", marginBottom:8, letterSpacing:1, lineHeight:1.2 }}>بِسْمِ اللَّهِ</div>
+        <div style={{ fontSize:26, fontWeight:800, color:th.text, marginBottom:6, letterSpacing:-0.5 }}>Dhikr Tracker</div>
+        <div style={{ fontSize:14, color:th.textMuted, marginBottom:36, fontFamily:"'Lora',serif", fontStyle:"italic" }}>Assalamu Alaikum — what's your name?</div>
+        <input ref={ref} value={val} onChange={e=>setVal(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="Enter your name"
+          style={{ width:"100%", padding:"14px 18px", borderRadius:14, fontSize:16, border:`1.5px solid ${th.border}`, color:th.text, background:th.inputBg, fontFamily:"inherit", fontWeight:600, marginBottom:14, transition:"border-color 0.2s" }}
+          onFocus={e=>e.target.style.borderColor="#40916c"} onBlur={e=>e.target.style.borderColor=th.border}/>
+        <button onClick={submit} disabled={!val.trim()} style={{ width:"100%", padding:"15px", borderRadius:14, border:"none", background:val.trim()?"#2d6a4f":th.border, color:val.trim()?"white":th.textMuted, fontSize:15, fontWeight:700, cursor:val.trim()?"pointer":"default", transition:"all 0.2s", fontFamily:"inherit", letterSpacing:0.3, boxShadow:val.trim()?"0 6px 24px rgba(45,106,79,0.28)":"none" }}>
+          Begin
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function NamesOfAllah({ th, isMobile }) {
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(null);
+
+  const filtered = search.trim()
+    ? NAMES_OF_ALLAH.filter(n =>
+        n.en.toLowerCase().includes(search.toLowerCase()) ||
+        n.meaning.toLowerCase().includes(search.toLowerCase()) ||
+        n.ar.includes(search)
+      )
+    : NAMES_OF_ALLAH;
+
+  const G = "#40916c";
+
+  // Colour palette cycling for cards
+  const PALETTES = [
+    { bg:"#1d3461", light:"#cfe2ff", accent:"#3d6fcc" },
+    { bg:"#2d6a4f", light:"#d8f3dc", accent:"#40916c" },
+    { bg:"#704800", light:"#fdefd0", accent:"#c89018" },
+    { bg:"#4a0e6b", light:"#edd9ff", accent:"#8b44c2" },
+    { bg:"#7b2d00", light:"#fde8d8", accent:"#c8612a" },
+    { bg:"#074a52", light:"#b8ecf0", accent:"#0a9098" },
+    { bg:"#3d405b", light:"#dde0f5", accent:"#6670c0" },
+    { bg:"#7a1c1c", light:"#fde0d0", accent:"#d44a2a" },
+  ];
+
+  return (
+    <div style={{ animation:"fadeUp 0.35s ease" }}>
+
+      {/* Header card */}
+      <div style={{ background: th.dark ? "linear-gradient(135deg,#1a2012 0%,#111009 100%)" : "linear-gradient(135deg,#f0f7ee 0%,#f5f1eb 100%)", borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?"22px 20px":"28px 40px", marginBottom:isMobile?14:20, position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:th.dark?"rgba(64,145,108,0.08)":"rgba(64,145,108,0.1)", pointerEvents:"none" }}/>
+        <div style={{ position:"relative" }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:G, marginBottom:8 }}>Asma ul Husna</div>
+          <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?26:34, fontWeight:700, color:th.text, lineHeight:1.3, marginBottom:4 }}>
+            {"أسماء اللّه الحُسْنَى"}
+          </div>
+          <div style={{ fontSize:13, color:th.textMuted, fontStyle:"italic", fontFamily:"'Lora',Georgia,serif", marginBottom:16 }}>The 99 Beautiful Names of Allah</div>
+          {/* Search */}
+          <div style={{ display:"flex", alignItems:"center", gap:10, background:th.surface, borderRadius:12, padding:"10px 16px", border:`1.5px solid ${th.border}` }}>
+            <span style={{ fontSize:14, opacity:0.5 }}>&#128269;</span>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search by name or meaning…"
+              style={{ flex:1, border:"none", background:"transparent", color:th.text, fontSize:14, fontFamily:"inherit", fontWeight:500, outline:"none" }}/>
+            {search && <span onClick={()=>setSearch("")} style={{ fontSize:18, color:th.textFaint, cursor:"pointer", lineHeight:1, userSelect:"none" }}>&times;</span>}
+          </div>
+          {search && <div style={{ marginTop:8, fontSize:11, color:th.textMuted }}>{filtered.length} result{filtered.length!==1?"s":""}</div>}
+        </div>
+      </div>
+
+      {/* Names grid */}
+      <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":"repeat(3,1fr)", gap:isMobile?10:14 }}>
+        {filtered.map((name, i) => {
+          const pal = PALETTES[name.n % PALETTES.length];
+          const isOpen = selected === name.n;
+          return (
+            <div key={name.n} onClick={() => setSelected(isOpen ? null : name.n)}
+              style={{ borderRadius:16, cursor:"pointer", transition:"all 0.28s cubic-bezier(0.34,1.56,0.64,1)", position:"relative", overflow:"hidden",
+                background: th.dark
+                  ? (isOpen ? `linear-gradient(145deg,${pal.bg},${pal.accent})` : "#1c1916")
+                  : (isOpen ? `linear-gradient(145deg,${pal.bg},${pal.accent})` : th.surface),
+                border: isOpen ? "none" : `1.5px solid ${th.dark ? pal.accent+"30" : pal.light}`,
+                boxShadow: isOpen ? `0 10px 32px ${pal.bg}55` : (th.dark?"none":"0 1px 8px rgba(0,0,0,0.04)"),
+                transform: isOpen ? "translateY(-2px) scale(1.02)" : "none",
+                padding: isOpen ? (isMobile?"18px 14px":"22px 20px") : (isMobile?"14px 12px":"18px 16px"),
+                animation:`fadeUp 0.35s ease ${(i%12)*0.03}s both`,
+              }}>
+              {/* Number badge */}
+              <div style={{ position:"absolute", top:10, right:12, fontSize:9, fontWeight:800, color: isOpen?"rgba(255,255,255,0.4)":(th.dark?pal.accent+"80":pal.accent+"90"), letterSpacing:0.5 }}>
+                {String(name.n).padStart(2,"0")}
+              </div>
+              {/* Arabic */}
+              <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?26:32, fontWeight:700, color: isOpen?"rgba(255,255,255,0.97)":(th.dark?pal.accent:pal.bg), direction:"rtl", textAlign:"center", lineHeight:1.6, marginBottom:6 }}>
+                {name.ar}
+              </div>
+              {/* Transliteration */}
+              <div style={{ fontSize:isMobile?10:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color: isOpen?"rgba(255,255,255,0.75)":(th.dark?pal.accent:pal.accent), textAlign:"center", marginBottom: isOpen?8:0 }}>
+                {name.en}
+              </div>
+              {/* Meaning — only shown when open */}
+              {isOpen && (
+                <div style={{ fontSize:isMobile?12:13, color:"rgba(255,255,255,0.65)", textAlign:"center", fontFamily:"'Lora',Georgia,serif", fontStyle:"italic", lineHeight:1.5, marginTop:4 }}>
+                  {name.meaning}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{ textAlign:"center", padding:"40px 20px", color:th.textMuted, fontSize:14 }}>No names found for "{search}"</div>
+      )}
+
+      <div style={{ textAlign:"center", marginTop:32, fontFamily:"'Amiri',Georgia,serif", fontSize:18, color:th.textFaint, letterSpacing:2, lineHeight:2 }}>
+        {"وللّهِ الأسْمَاءُ الحُسْنَى فَادْعُوهُ بِهَا"}
+      </div>
+      <div style={{ textAlign:"center", fontSize:11, color:th.textFaint, fontFamily:"'Lora',Georgia,serif", fontStyle:"italic", marginBottom:8 }}>
+        "And to Allah belong the best names, so invoke Him by them." — Surah Al-A'raf 7:180
+      </div>
+    </div>
+  );
+}
+
+function DuaCollection({ th, isMobile }) {
+  const [cat,      setCat]      = useState("All");
+  const [expanded, setExpanded] = useState(null);
+  const BLUE = "#3d6fcc";
+  const filtered = cat === "All" ? DUAS : DUAS.filter(d => d.cat === cat);
+  return (
+    <div style={{ animation:"fadeUp 0.35s ease" }}>
+      <div style={{ background:th.dark?"linear-gradient(135deg,#141a2e 0%,#111009 100%)":"linear-gradient(135deg,#eef2fb 0%,#f5f1eb 100%)", borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?"22px 20px":"28px 40px", marginBottom:isMobile?14:20, position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:-50, right:-50, width:180, height:180, borderRadius:"50%", background:th.dark?"rgba(61,111,204,0.07)":"rgba(207,226,255,0.35)", pointerEvents:"none", zIndex:0 }}/>
+        <div style={{ position:"relative", zIndex:1 }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:BLUE, marginBottom:10 }}>Du'a Collection</div>
+          <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?28:38, fontWeight:700, color:th.text, lineHeight:1.4, marginBottom:8, direction:"rtl", textAlign:"left" }}>
+            أَدْعِيَةٌ مَأْثُورَةٌ
+          </div>
+          <div style={{ fontSize:13, color:th.textMuted, fontStyle:"italic", fontFamily:"'Lora',Georgia,serif", lineHeight:1.6 }}>Authenticated supplications for every occasion</div>
+        </div>
+      </div>
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:isMobile?14:18 }}>
+        {DUA_CATEGORIES.map(c => {
+          const isAct = cat === c;
+          return (
+            <button key={c} onClick={() => { setCat(c); setExpanded(null); }} style={{ padding:"6px 14px", borderRadius:20, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.18s", border:isAct?"none":`1.5px solid ${th.border2}`, background:isAct?BLUE:"transparent", color:isAct?"white":th.textMuted }}>
+              {c}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ display:"flex", flexDirection:"column", gap:isMobile?10:12 }}>
+        {filtered.map((dua, i) => {
+          const isOpen = expanded === dua.id;
+          return (
+            <div key={dua.id} onClick={() => setExpanded(isOpen ? null : dua.id)}
+              style={{ borderRadius:18, border:`1.5px solid ${isOpen?BLUE:th.border}`, background:isOpen?(th.dark?"#111d33":"#f0f5ff"):th.surface, cursor:"pointer", transition:"all 0.25s ease", boxShadow:isOpen?(th.dark?"0 8px 32px rgba(61,111,204,0.2)":"0 8px 32px rgba(61,111,204,0.1)"):(th.dark?"none":"0 1px 8px rgba(0,0,0,0.04)"), animation:`fadeUp 0.3s ease ${i*0.03}s both`, overflow:"hidden" }}>
+              <div style={{ padding:isMobile?"14px 16px":"16px 24px" }}>
+
+                {/* Top row: category badge + chevron */}
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                  <span style={{ fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:isOpen?BLUE:th.textFaint, background:isOpen?(th.dark?"rgba(61,111,204,0.15)":"rgba(61,111,204,0.08)"):(th.dark?"rgba(255,255,255,0.04)":th.surface2), padding:"3px 10px", borderRadius:20, border:`1px solid ${isOpen?"rgba(61,111,204,0.3)":th.border}` }}>
+                    {dua.cat}
+                  </span>
+                  <span style={{ fontSize:14, color:isOpen?BLUE:th.textFaint, transition:"transform 0.22s", display:"inline-block", transform:isOpen?"rotate(180deg)":"none" }}>&#8964;</span>
+                </div>
+
+                {/* Arabic */}
+                <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?22:28, color:isOpen?(th.dark?"#8fb8f5":"#1d3461"):th.text, direction:"rtl", textAlign:"right", lineHeight:1.8, fontWeight:400, marginBottom:10 }}>
+                  {dua.ar}
+                </div>
+
+                {/* Divider */}
+                <div style={{ width:"100%", height:1, background:isOpen?"rgba(61,111,204,0.15)":th.border, marginBottom:10 }}/>
+
+                {/* Transliteration */}
+                <div style={{ fontSize:isMobile?11:12, color:isOpen?(th.dark?"#8fb8f5":BLUE):th.textMuted, fontStyle:"italic", lineHeight:1.7, letterSpacing:0.3, marginBottom:6 }}>
+                  {dua.tr}
+                </div>
+
+                {/* Translation */}
+                <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:isMobile?13:14, color:th.text, lineHeight:1.75 }}>
+                  "{dua.en}"
+                </div>
+
+                {/* Source — only when expanded */}
+                {isOpen && (
+                  <div style={{ marginTop:12, paddingTop:12, borderTop:`1px solid ${th.dark?"rgba(61,111,204,0.2)":"rgba(61,111,204,0.15)"}`, display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ width:20, height:2, background:BLUE, borderRadius:1, opacity:0.5, flexShrink:0 }}/>
+                    <div style={{ fontSize:11, color:th.dark?"#6090c8":"#6080aa", fontWeight:600 }}>{dua.source}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ textAlign:"center", marginTop:32, fontFamily:"'Amiri',Georgia,serif", fontSize:18, color:th.textFaint, letterSpacing:2, lineHeight:2 }}>
+        وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ
+      </div>
+      <div style={{ textAlign:"center", fontSize:11, color:th.textFaint, fontFamily:"'Lora',Georgia,serif", fontStyle:"italic", marginBottom:8 }}>
+        "And when My servants ask about Me — indeed I am near." — Surah Al-Baqarah 2:186
+      </div>
+    </div>
+  );
+}
+
+
+
+
+/* ─────────────────────── QIBLA FINDER ─────────────────────── */
+function QiblaFinder({ th, isMobile }) {
+  const [location, setLocation]   = React.useState(null);
+  const [qibla,    setQibla]      = React.useState(null);
+  const [compass,  setCompass]    = React.useState(null); // device heading
+  const [error,    setError]      = React.useState(null);
+  const [loading,  setLoading]    = React.useState(false);
+  const [permDenied, setPermDenied] = React.useState(false);
+  const [manMode,  setManMode]    = React.useState(false);
+  const [manLat,   setManLat]     = React.useState('');
+  const [manLng,   setManLng]     = React.useState('');
+  const watchRef   = React.useRef(null);
+  const orientRef  = React.useRef(null);
+  const G = '#40916c';
+  const MAKKAH = { lat: 21.4225, lng: 39.8262 };
+
+  function calcQibla(lat, lng) {
+    const toRad = d => d * Math.PI / 180;
+    const toDeg = r => r * 180 / Math.PI;
+    const dLng  = toRad(MAKKAH.lng - lng);
+    const lat1  = toRad(lat);
+    const lat2  = toRad(MAKKAH.lat);
+    const y     = Math.sin(dLng) * Math.cos(lat2);
+    const x     = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  }
+
+  function calcDistance(lat, lng) {
+    const R = 6371;
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(MAKKAH.lat - lat);
+    const dLng = toRad(MAKKAH.lng - lng);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat)) * Math.cos(toRad(MAKKAH.lat)) * Math.sin(dLng/2)**2;
+    return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }
+
+  function startWithLocation(lat, lng) {
+    const q = calcQibla(lat, lng);
+    const d = calcDistance(lat, lng);
+    setQibla({ angle: q, distance: d });
+    setLocation({ lat, lng });
+    setLoading(false);
+    startCompass();
+  }
+
+  function startCompass() {
+    // iOS 13+ requires permission for DeviceOrientationEvent
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(p => { if (p === 'granted') listenOrientation(); })
+        .catch(() => {});
+    } else if (window.DeviceOrientationEvent) {
+      listenOrientation();
+    }
+  }
+
+  function listenOrientation() {
+    const handler = e => {
+      // webkitCompassHeading = true compass heading on iOS
+      // alpha on Android (needs to be adjusted)
+      if (e.webkitCompassHeading != null) {
+        setCompass(e.webkitCompassHeading);
+      } else if (e.alpha != null) {
+        setCompass((360 - e.alpha) % 360);
+      }
+    };
+    window.addEventListener('deviceorientation', handler, { passive: true });
+    orientRef.current = handler;
+  }
+
+  React.useEffect(() => {
+    return () => {
+      if (orientRef.current) window.removeEventListener('deviceorientation', orientRef.current);
+      if (watchRef.current && navigator.geolocation) navigator.geolocation.clearWatch(watchRef.current);
+    };
+  }, []);
+
+  function getLocation() {
+    setLoading(true);
+    setError(null);
+    if (!navigator.geolocation) { setError('Geolocation not supported'); setLoading(false); return; }
+    navigator.geolocation.getCurrentPosition(
+      p => startWithLocation(p.coords.latitude, p.coords.longitude),
+      () => { setLoading(false); setPermDenied(true); setError('Location denied — enter manually below'); },
+      { timeout: 8000, maximumAge: 60000 }
+    );
+  }
+
+  function applyManual() {
+    const lat = parseFloat(manLat), lng = parseFloat(manLng);
+    if (isNaN(lat) || isNaN(lng)) { setError('Enter valid coordinates'); return; }
+    setError(null); setPermDenied(false); setManMode(false);
+    startWithLocation(lat, lng);
+  }
+
+  // Needle rotation: qibla angle minus compass heading = direction to rotate to
+  const needleAngle = qibla != null && compass != null ? qibla.angle - compass : qibla?.angle ?? 0;
+  const hasCompass  = compass != null;
+  const compassMsg  = !hasCompass
+    ? (isMobile ? 'Tap the compass to enable live direction' : 'Live compass requires a mobile device with a gyroscope')
+    : null;
+
+  const heroBg = th.dark
+    ? 'linear-gradient(135deg,#0d2218 0%,#111009 100%)'
+    : 'linear-gradient(135deg,#e2f0e8 0%,#f5f1eb 100%)';
+
+  // Draw compass SVG
+  const size = isMobile ? 260 : 300;
+  const cx = size / 2, cy = size / 2, r = size / 2 - 12;
+
+  return (
+    <div style={{ animation:'fadeUp 0.35s ease' }}>
+
+      {/* Hero header */}
+      <div style={{ borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?'22px 20px':'28px 40px', marginBottom:isMobile?14:20, background:heroBg, position:'relative', overflow:'hidden' }}>
+        <div style={{ position:'absolute', top:-50, right:-50, width:180, height:180, borderRadius:'50%', background:th.dark?'rgba(64,145,108,0.08)':'rgba(64,145,108,0.1)', pointerEvents:'none' }}/>
+        <div style={{ position:'relative' }}>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:'uppercase', color:G, marginBottom:8 }}>Al-Qibla</div>
+          <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?26:34, fontWeight:700, color:th.text, marginBottom:4, direction:'rtl', textAlign:'left' }}>
+            اتَّجِهْ نَحْوَ الْكَعْبَةِ
+          </div>
+          <div style={{ fontSize:13, color:th.textMuted, fontStyle:'italic', fontFamily:"'Lora',Georgia,serif" }}>
+            Direction to the Kaaba, Makkah al-Mukarramah
+          </div>
+        </div>
+      </div>
+
+      {/* Main card */}
+      <div style={{ background:th.surface, borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?'24px 20px':'32px 40px', marginBottom:isMobile?14:20 }}>
+
+        {!qibla ? (
+          /* ── No location yet ── */
+          <div style={{ textAlign:'center', padding:'20px 0' }}>
+            <div style={{ fontSize:64, marginBottom:16 }}>🕋</div>
+            <div style={{ fontSize:16, fontWeight:700, color:th.text, marginBottom:8 }}>Find Your Qibla Direction</div>
+            <div style={{ fontSize:13, color:th.textMuted, marginBottom:24, lineHeight:1.7 }}>
+              {permDenied ? 'Location access was denied.' : 'Tap below to detect your location and calculate the Qibla.'}
+            </div>
+            {error && <div style={{ fontSize:12, color:'#c8612a', fontWeight:600, marginBottom:16 }}>{error}</div>}
+            <button onClick={getLocation} disabled={loading}
+              style={{ padding:'13px 32px', borderRadius:14, border:'none', background:loading?th.border:G, color:'white', fontSize:14, fontWeight:700, cursor:loading?'default':'pointer', fontFamily:'inherit', marginBottom:16, boxShadow:loading?'none':'0 4px 20px rgba(64,145,108,0.3)' }}>
+              {loading ? 'Locating…' : '📍 Detect My Location'}
+            </button>
+            <div>
+              <button onClick={() => setManMode(m => !m)} style={{ fontSize:12, color:G, fontWeight:600, border:'none', background:'none', cursor:'pointer', fontFamily:'inherit', textDecoration:'underline' }}>
+                Or enter coordinates manually
+              </button>
+            </div>
+            {manMode && (
+              <div style={{ marginTop:16, display:'flex', flexDirection:'column', gap:8, maxWidth:320, margin:'16px auto 0' }}>
+                <div style={{ display:'flex', gap:8 }}>
+                  <input value={manLat} onChange={e=>setManLat(e.target.value)} placeholder="Latitude"
+                    style={{ flex:1, padding:'10px 12px', borderRadius:10, border:`1.5px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:13, fontFamily:'inherit', outline:'none' }}
+                    onFocus={e=>e.target.style.borderColor=G} onBlur={e=>e.target.style.borderColor=th.border}/>
+                  <input value={manLng} onChange={e=>setManLng(e.target.value)} placeholder="Longitude"
+                    style={{ flex:1, padding:'10px 12px', borderRadius:10, border:`1.5px solid ${th.border}`, background:th.inputBg, color:th.text, fontSize:13, fontFamily:'inherit', outline:'none' }}
+                    onFocus={e=>e.target.style.borderColor=G} onBlur={e=>e.target.style.borderColor=th.border}
+                    onKeyDown={e=>e.key==='Enter'&&applyManual()}/>
+                </div>
+                <button onClick={applyManual} style={{ padding:'11px', borderRadius:12, border:'none', background:G, color:'white', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:'inherit' }}>
+                  Calculate Qibla
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── Qibla found ── */
+          <div style={{ display:'flex', flexDirection:isMobile?'column':'row', alignItems:'center', gap:isMobile?24:40 }}>
+
+            {/* Compass dial */}
+            <div style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+              <div
+                onClick={!hasCompass ? startCompass : undefined}
+                style={{ cursor: hasCompass ? 'default' : 'pointer', position:'relative' }}>
+                <svg width={size} height={size} style={{ filter: th.dark?'drop-shadow(0 4px 24px rgba(0,0,0,0.4))':'drop-shadow(0 4px 24px rgba(0,0,0,0.12))' }}>
+                  {/* Outer ring */}
+                  <circle cx={cx} cy={cy} r={r} fill={th.dark?'#1c1916':'#f8f6f2'} stroke={th.border} strokeWidth="1.5"/>
+                  {/* Tick marks */}
+                  {Array.from({length:72}).map((_,i) => {
+                    const a = (i/72)*2*Math.PI - Math.PI/2;
+                    const isMajor = i % 9 === 0;
+                    const r1 = r - (isMajor ? 18 : 10);
+                    const r2 = r - 4;
+                    return <line key={i}
+                      x1={cx + r1*Math.cos(a)} y1={cy + r1*Math.sin(a)}
+                      x2={cx + r2*Math.cos(a)} y2={cy + r2*Math.sin(a)}
+                      stroke={isMajor ? th.text : th.border} strokeWidth={isMajor?1.5:0.8} opacity={isMajor?0.6:0.3}/>;
+                  })}
+                  {/* Cardinal labels */}
+                  {[['N',0],['E',90],['S',180],['W',270]].map(([lbl,deg]) => {
+                    const a = (deg - 90) * Math.PI / 180;
+                    const lr = r - 30;
+                    return <text key={lbl} x={cx+lr*Math.cos(a)} y={cy+lr*Math.sin(a)+5}
+                      textAnchor="middle" fontSize={isMobile?11:13} fontWeight="700"
+                      fill={lbl==='N'?'#e63946':th.textMuted} fontFamily="Inter,sans-serif">{lbl}</text>;
+                  })}
+
+                  {/* Rotating group — contains needle + Kaaba marker */}
+                  <g style={{ transformOrigin:`${cx}px ${cy}px`, transform:`rotate(${needleAngle}deg)`, transition: hasCompass ? 'transform 0.15s ease-out' : 'none' }}>
+                    {/* North needle (red) */}
+                    <polygon points={`${cx},${cy-r+40} ${cx-7},${cy+10} ${cx+7},${cy+10}`} fill="#e63946" opacity="0.9"/>
+                    {/* South needle (grey) */}
+                    <polygon points={`${cx},${cy+r-40} ${cx-7},${cy-10} ${cx+7},${cy-10}`} fill={th.textFaint} opacity="0.5"/>
+                    {/* Center dot */}
+                    <circle cx={cx} cy={cy} r={7} fill={th.surface} stroke={th.border} strokeWidth="1.5"/>
+                    {/* Kaaba icon at tip */}
+                    <text x={cx} y={cy-r+28} textAnchor="middle" fontSize={isMobile?18:22}>🕋</text>
+                  </g>
+
+                  {/* Qibla angle arc */}
+                  {!hasCompass && (
+                    <text x={cx} y={cy+5} textAnchor="middle" fontSize={isMobile?28:34} fontWeight="800"
+                      fill={G} fontFamily="Inter,sans-serif">{Math.round(qibla.angle)}°</text>
+                  )}
+                </svg>
+              </div>
+
+              {compassMsg && (
+                <div style={{ fontSize:11, color:th.textFaint, textAlign:'center', maxWidth:size, lineHeight:1.5 }}>
+                  {compassMsg}
+                </div>
+              )}
+              {hasCompass && (
+                <div style={{ fontSize:11, color:G, fontWeight:700, textAlign:'center' }}>
+                  🧭 Live compass active — point the top of your phone toward the 🕋
+                </div>
+              )}
+            </div>
+
+            {/* Info panel */}
+            <div style={{ flex:1, width:'100%' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:16 }}>
+                {[
+                  { label:'Qibla Direction', value: Math.round(qibla.angle) + '°', sub: degToCompass(qibla.angle) },
+                  { label:'Distance to Makkah', value: qibla.distance.toLocaleString() + ' km', sub: 'Great-circle distance' },
+                  { label:'Your Location', value: location.lat.toFixed(3) + '°', sub: 'Latitude' },
+                  { label:'', value: location.lng.toFixed(3) + '°', sub: 'Longitude' },
+                ].map((item,i) => (
+                  <div key={i} style={{ background:th.dark?'rgba(64,145,108,0.08)':'rgba(64,145,108,0.05)', borderRadius:14, padding:'14px 16px', border:`1px solid ${th.dark?'rgba(64,145,108,0.15)':'rgba(64,145,108,0.12)'}` }}>
+                    {item.label && <div style={{ fontSize:10, fontWeight:700, letterSpacing:1, textTransform:'uppercase', color:th.textMuted, marginBottom:4 }}>{item.label}</div>}
+                    <div style={{ fontSize:22, fontWeight:800, color:G, letterSpacing:-0.5 }}>{item.value}</div>
+                    <div style={{ fontSize:11, color:th.textFaint, marginTop:2 }}>{item.sub}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recalculate button */}
+              <button onClick={() => { setQibla(null); setLocation(null); setCompass(null); setError(null); setPermDenied(false); }}
+                style={{ width:'100%', padding:'11px', borderRadius:12, border:`1.5px solid ${th.border}`, background:'transparent', color:th.textMuted, fontSize:12, fontWeight:700, cursor:'pointer', fontFamily:'inherit', transition:'all 0.17s' }}
+                onMouseEnter={e=>{e.target.style.borderColor=G;e.target.style.color=G;}}
+                onMouseLeave={e=>{e.target.style.borderColor=th.border;e.target.style.color=th.textMuted;}}>
+                📍 Change Location
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Hadith about Qibla */}
+      <div style={{ background:th.surface, borderRadius:16, border:`1.5px solid ${th.border}`, padding:isMobile?'16px':'20px 28px' }}>
+        <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?18:22, color:th.text, direction:'rtl', textAlign:'right', lineHeight:1.9, marginBottom:10 }}>
+          وَحَيْثُ مَا كُنتُمْ فَوَلُّوا وُجُوهَكُمْ شَطْرَهُ
+        </div>
+        <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:13, color:th.text, fontStyle:'italic', marginBottom:8, lineHeight:1.7 }}>
+          "Wherever you are, turn your faces toward it." — Surah Al-Baqarah 2:150
+        </div>
+      </div>
+
+      <div style={{ textAlign:'center', marginTop:24, fontFamily:"'Amiri',Georgia,serif", fontSize:16, color:th.textFaint, letterSpacing:1 }}>
+        بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+      </div>
+    </div>
+  );
+}
+
+function degToCompass(deg) {
+  const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  return dirs[Math.round(deg / 22.5) % 16];
+}
+
+/* ─────────────────────── PRAYER CARD ──────────────────────── */
+const PrayerCard = memo(function PrayerCard({ label, islamicDate, times, currentPrayer, th, isMobile, isToday }) {
+  const G = "#40916c";
+  const ps = times.filter(t => t.id !== "sunrise");
+  const sr = times.find(t => t.id === "sunrise");
+  return (
+    <div style={{ background:th.surface, borderRadius:20, border:`1.5px solid ${th.border}`, overflow:"hidden", marginBottom:isMobile?14:20 }}>
+      <div style={{ padding:isMobile?"13px 18px":"15px 28px", borderBottom:`1px solid ${th.border}`, display:"flex", alignItems:"center", justifyContent:"space-between", background:th.dark?"rgba(255,255,255,0.02)":"rgba(0,0,0,0.015)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:11, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:isToday?G:th.textMuted }}>{label}</span>
+          {isToday && <div style={{ width:6, height:6, borderRadius:"50%", background:G }}/>}
+        </div>
+        <span style={{ fontSize:11, color:th.textMuted, fontWeight:500 }}>{islamicDate.day} {islamicDate.month} {islamicDate.year} AH</span>
+      </div>
+      <div>
+        {ps.map(p => {
+          const act = isToday && p.id === currentPrayer;
+          return (
+            <div key={p.id} style={{ display:"flex", alignItems:"center", padding:isMobile?"13px 18px":"15px 28px", background:act?(th.dark?"rgba(64,145,108,0.13)":"rgba(64,145,108,0.07)"):"transparent", borderLeft:act?"3px solid "+G:"3px solid transparent", transition:"all 0.25s" }}>
+              <div style={{ fontSize:18, width:28, flexShrink:0, opacity:act?1:0.55 }}>{p.icon}</div>
+              <div style={{ flex:1, marginLeft:12 }}>
+                <div style={{ fontSize:isMobile?13:14, fontWeight:act?700:600, color:act?(th.dark?"#74c69d":G):th.text }}>{p.name}</div>
+                <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:13, color:act?(th.dark?"#74c69d":G):th.textFaint, marginTop:1 }}>{p.arabic}</div>
+              </div>
+              {p.id==="fajr" && sr && (
+                <div style={{ fontSize:10, color:th.textFaint, marginRight:16, textAlign:"right" }}>
+                  <span style={{ opacity:0.7 }}>Sunrise </span><span style={{ fontWeight:600 }}>{sr.formatted}</span>
+                </div>
+              )}
+              <div style={{ textAlign:"right" }}>
+                <div style={{ fontSize:isMobile?16:18, fontWeight:800, color:act?(th.dark?"#74c69d":G):th.text, fontVariantNumeric:"tabular-nums", letterSpacing:-0.5 }}>{p.formatted}</div>
+                {act && <div style={{ fontSize:9, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:th.dark?"#52b788":G, marginTop:2 }}>Current</div>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+});
+
+/* ─────────────────────── LOCATION SEARCH ───────────── */
+function LocationSearch({ th, isMobile, onSelect, currentCity, G }) {
+  const [open,       setOpen]       = useState(false);
+  const [query,      setQuery]      = useState("");
+  const [results,    setResults]    = useState([]);
+  const [searching,  setSearching]  = useState(false);
+  const [manualMode, setManualMode] = useState(false);
+  const [manLat,     setManLat]     = useState("");
+  const [manLng,     setManLng]     = useState("");
+  const [manErr,     setManErr]     = useState("");
+  const [dropPos,    setDropPos]    = useState({ top:0, left:0, width:360 });
+  const btnRef  = useRef();
+  const inputRef = useRef();
+
+  // Calculate dropdown position from button
+  const openDropdown = () => {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setDropPos({
+        top:  r.bottom + 8,
+        left: Math.min(r.left, window.innerWidth - (isMobile ? Math.min(380, window.innerWidth - 32) : 380) - 8),
+        width: isMobile ? Math.min(380, window.innerWidth - 32) : 380,
+      });
+    }
+    setOpen(true);
+  };
+
+  useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 120); }, [open]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const h = e => { if (!e.target.closest('[data-locsearch]')) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, [open]);
+
+  const doSearch = async (q) => {
+    if (!q.trim()) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(q) + "&count=6&language=en&format=json");
+      const data = await res.json();
+      setResults(data.results || []);
+    } catch { setResults([]); }
+    setSearching(false);
+  };
+
+  useEffect(() => { const t = setTimeout(() => doSearch(query), 400); return () => clearTimeout(t); }, [query]);
+
+  const applyManual = () => {
+    const lat = parseFloat(manLat), lng = parseFloat(manLng);
+    if (isNaN(lat) || lat < -90  || lat > 90)  { setManErr("Latitude must be −90 to 90");   return; }
+    if (isNaN(lng) || lng < -180 || lng > 180) { setManErr("Longitude must be −180 to 180"); return; }
+    setManErr("");
+    onSelect({ lat, lng, city: lat.toFixed(3) + "°, " + lng.toFixed(3) + "°" });
+    setOpen(false); setQuery(""); setResults([]);
+  };
+
+  const close = () => { setOpen(false); setQuery(""); setResults([]); setManErr(""); };
+
+  const inpStyle = { padding:"9px 12px", borderRadius:10, border:"1.5px solid "+th.border, background:th.inputBg, color:th.text, fontSize:13, fontFamily:"inherit", fontWeight:500, outline:"none", flex:1, minWidth:0 };
+
+  return (
+    <div data-locsearch="1" style={{ position:"relative", display:"inline-block" }}>
+      <button ref={btnRef} onClick={() => open ? close() : openDropdown()} style={{ display:"flex", alignItems:"center", gap:6, padding:"6px 14px", borderRadius:20, border: open?"none":"1.5px solid "+th.border2, background: open?G:"transparent", color: open?"white":th.textMuted, fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.17s", whiteSpace:"nowrap" }}>
+        <span>&#128205;</span> {currentCity || "Set Location"}
+      </button>
+
+      {open && (
+        <div data-locsearch="1" style={{ position:"fixed", top:dropPos.top, left:dropPos.left, width:dropPos.width, zIndex:9000, background:th.surface, borderRadius:16, border:"1.5px solid "+th.border, boxShadow:th.dark?"0 16px 48px rgba(0,0,0,0.6)":"0 16px 48px rgba(0,0,0,0.18)", animation:"slideDown 0.18s ease", overflow:"hidden" }}>
+
+          {/* Mode tabs */}
+          <div style={{ display:"flex", borderBottom:"1px solid "+th.border }}>
+            {["Search City","Manual Coords"].map((lbl,i) => (
+              <button key={i} onClick={() => setManualMode(i===1)} style={{ flex:1, padding:"11px 8px", border:"none", cursor:"pointer", fontFamily:"inherit", fontSize:11, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", background:(manualMode===(i===1))?(th.dark?"rgba(64,145,108,0.15)":"rgba(64,145,108,0.07)"):"transparent", color:(manualMode===(i===1))?G:th.textMuted, borderBottom:(manualMode===(i===1))?"2px solid "+G:"2px solid transparent", transition:"all 0.17s" }}>{lbl}</button>
+            ))}
+          </div>
+
+          {!manualMode ? (
+            <div>
+              {/* Search input */}
+              <div style={{ padding:"12px 14px", borderBottom:"1px solid "+th.border, display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:14, opacity:0.5, flexShrink:0 }}>&#128269;</span>
+                <input ref={inputRef} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search city or country…"
+                  style={{ flex:1, border:"none", background:"transparent", color:th.text, fontSize:14, fontFamily:"inherit", fontWeight:500, outline:"none", minWidth:0 }}/>
+                {searching && <span style={{ fontSize:11, color:th.textFaint, flexShrink:0 }}>&#8230;</span>}
+                {query && !searching && <span onClick={() => { setQuery(""); setResults([]); }} style={{ fontSize:20, color:th.textFaint, cursor:"pointer", lineHeight:1, flexShrink:0, userSelect:"none" }}>&times;</span>}
+              </div>
+              {/* Results */}
+              <div style={{ maxHeight:220, overflowY:"auto" }}>
+                {results.length===0 && query.trim() && !searching && <div style={{ padding:"20px", textAlign:"center", color:th.textFaint, fontSize:13 }}>No results found</div>}
+                {results.length===0 && !query.trim() && (
+                  <div style={{ padding:"16px", color:th.textFaint, fontSize:12, lineHeight:1.8 }}>
+                    Type a city name to search.<br/>
+                    <span style={{ color:G, fontWeight:600, cursor:"pointer" }} onClick={() => setManualMode(true)}>Or enter coordinates manually →</span>
+                  </div>
+                )}
+                {results.map((r,i) => (
+                  <div key={i} onClick={() => { onSelect({ lat:r.latitude, lng:r.longitude, city:r.name+(r.country?", "+r.country:"") }); close(); }}
+                    style={{ padding:"11px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:10, borderBottom:i<results.length-1?"1px solid "+th.border:"none", transition:"background 0.12s" }}
+                    onMouseEnter={e=>e.currentTarget.style.background=th.dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.03)"}
+                    onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                    <span style={{ flexShrink:0 }}>&#127970;</span>
+                    <div style={{ minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, color:th.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{r.name}{r.admin1?", "+r.admin1:""}</div>
+                      <div style={{ fontSize:11, color:th.textFaint, marginTop:1 }}>{r.country} · {r.latitude.toFixed(2)}°, {r.longitude.toFixed(2)}°</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ padding:"16px" }}>
+              <div style={{ fontSize:12, color:th.textMuted, marginBottom:12, lineHeight:1.7 }}>
+                Enter decimal latitude and longitude.<br/>
+                <span style={{ color:th.textFaint }}>e.g. Chennai: <strong style={{ color:th.text }}>13.0827</strong>, <strong style={{ color:th.text }}>80.2707</strong></span>
+              </div>
+              <div style={{ display:"flex", gap:8, marginBottom:4 }}>
+                <input value={manLat} onChange={e=>setManLat(e.target.value)} placeholder="Latitude" style={inpStyle}
+                  onFocus={e=>e.target.style.borderColor=G} onBlur={e=>e.target.style.borderColor=th.border}/>
+                <input value={manLng} onChange={e=>setManLng(e.target.value)} placeholder="Longitude" style={inpStyle}
+                  onFocus={e=>e.target.style.borderColor=G} onBlur={e=>e.target.style.borderColor=th.border}
+                  onKeyDown={e=>e.key==="Enter"&&applyManual()}/>
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:th.textFaint, paddingLeft:2 }}>
+                <span>Latitude (-90 to 90)</span><span>Longitude (-180 to 180)</span>
+              </div>
+              {manErr && <div style={{ marginTop:8, fontSize:11, color:"#c8612a", fontWeight:600 }}>{manErr}</div>}
+              <button onClick={applyManual} style={{ marginTop:12, width:"100%", padding:"11px", borderRadius:12, border:"none", background:G, color:"white", fontSize:13, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }}>Apply</button>
+            </div>
+          )}
+
+          <div style={{ padding:"10px 16px", borderTop:"1px solid "+th.border, textAlign:"right" }}>
+            <button onClick={close} style={{ fontSize:11, color:th.textFaint, border:"none", background:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+/* ─────────────────────── PRAYER TIMES TAB ───────── */
+
+function PrayerTimesTab({ th, isMobile }) {
+  const saved  = useMemo(() => loadPS(), []);
+  const [location, setLocation] = useState(saved?.location || null);
+  const [locError, setLocError] = useState(null);
+  const [loading,  setLoading]  = useState(!saved?.location);
+  const [now,      setNow]      = useState(new Date());
+  const [method,   setMethod]   = useState(saved?.method   || "MWL");
+  const [madhab,   setMadhab]   = useState(saved?.madhab   || "shafii");
+  const [cityName, setCityName] = useState(saved?.cityName || "");
+  const verse  = useMemo(() => todaysVerse(), []);
+  const dayNum = useMemo(() => getDayOfYear(), []);
+  const G = "#40916c";
+
+  // Persist prayer settings whenever they change
+  useEffect(() => { savePS({ location, cityName, method, madhab }); }, [location, cityName, method, madhab]);
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+
+  const geoRan = useRef(false);
+  useEffect(() => {
+    if (location) return; // skip if we already have a saved location
+    if (geoRan.current) return;
+    geoRan.current = true;
+    if (!navigator.geolocation) { setLoading(false); return; }
+    navigator.geolocation.getCurrentPosition(
+      p  => { setLocation({ lat: p.coords.latitude, lng: p.coords.longitude }); setLoading(false); },
+      () => { setLocError("Auto-detect failed — tap Set Location to pick your city."); setLoading(false); },
+      { timeout: 8000, maximumAge: 600000 }
+    );
+  }, []);
+
+  const handleSelect = ({ lat, lng, city }) => { setLocation({ lat, lng }); setCityName(city); setLocError(null); };
+
+  const todayTimes  = useMemo(() => location ? calcPrayerTimes(now,      location.lat, location.lng, method, madhab === "hanafi" ? 2 : 1) : [], [location, now.toDateString(), method, madhab]);
+  const tomDate     = useMemo(() => { const d = new Date(now); d.setDate(d.getDate() + 1); return d; }, [now.toDateString()]);
+  const tomTimes    = useMemo(() => location ? calcPrayerTimes(tomDate,  location.lat, location.lng, method, madhab === "hanafi" ? 2 : 1) : [], [location, tomDate, method, madhab]);
+  const idate       = useMemo(() => getIslamicDate(now),     [now.toDateString()]);
+  const idateTom    = useMemo(() => getIslamicDate(tomDate), [tomDate]);
+  const curPrayer   = useMemo(() => getCurrentPrayer(todayTimes), [todayTimes, now.getMinutes()]);
+  const nextPrayer  = useMemo(() => getNextPrayer(todayTimes),    [todayTimes, now.getMinutes()]);
+
+  if (loading) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:300, color:th.textMuted }}>
+      <div style={{ textAlign:"center" }}>
+        <div style={{ fontSize:36, marginBottom:12 }}>🕌</div>
+        <div style={{ fontSize:14, fontWeight:500 }}>Locating you…</div>
+      </div>
+    </div>
+  );
+
+  if (!location) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", minHeight:300 }}>
+      <div style={{ textAlign:"center", maxWidth:320 }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>📍</div>
+        <div style={{ fontSize:18, fontWeight:800, color:th.text, marginBottom:8 }}>Set your location</div>
+        <div style={{ fontSize:14, color:th.textMuted, marginBottom:24, lineHeight:1.6 }}>
+          {locError || "Choose your city to see accurate prayer times."}
+        </div>
+        <LocationSearch th={th} isMobile={isMobile} onSelect={handleSelect} currentCity={cityName} G={G}/>
+      </div>
+    </div>
+  );
+
+  const heroBg = th.dark ? "linear-gradient(135deg,#1a2e22 0%,#111009 100%)" : "linear-gradient(135deg,#e8f5ee 0%,#f5f1eb 100%)";
+
+  return (
+    <div style={{ animation:"fadeUp 0.35s ease" }}>
+
+      {/* Islamic Date + Clock hero */}
+      <div style={{ borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?"22px 20px":"30px 40px", marginBottom:isMobile?14:20, position:"relative", background:heroBg }}>
+        <div style={{ position:"absolute", top:-60, right:-60, width:200, height:200, borderRadius:"50%", background:th.dark?"rgba(64,145,108,0.08)":"rgba(64,145,108,0.1)", pointerEvents:"none" }}/>
+        <div style={{ position:"absolute", bottom:-40, left:-40, width:140, height:140, borderRadius:"50%", background:th.dark?"rgba(64,145,108,0.05)":"rgba(64,145,108,0.07)", pointerEvents:"none" }}/>
+        <div style={{ position:"relative", display:"flex", flexDirection:isMobile?"column":"row", alignItems:isMobile?"flex-start":"center", justifyContent:"space-between", gap:16 }}>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, letterSpacing:2.5, textTransform:"uppercase", color:G, marginBottom:8 }}>Islamic Date</div>
+            <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:isMobile?28:36, fontWeight:700, color:th.text, lineHeight:1.2, marginBottom:4 }}>{idate.day} {idate.month}</div>
+            <div style={{ fontSize:15, fontWeight:600, color:th.textSub }}>{idate.year} AH</div>
+            <div style={{ marginTop:9, fontSize:11, color:th.textMuted, fontWeight:500 }}>{now.toLocaleDateString([], { weekday:"long", year:"numeric", month:"long", day:"numeric" })}</div>
+            <div style={{ marginTop:10 }}>
+              <LocationSearch th={th} isMobile={isMobile} onSelect={handleSelect} currentCity={cityName} G={G}/>
+            </div>
+            {locError && <div style={{ marginTop:6, fontSize:10, color:"#c8612a", fontWeight:600 }}>⚠️ {locError}</div>}
+          </div>
+          <div style={{ textAlign:isMobile?"left":"right" }}>
+            <div style={{ fontSize:isMobile?38:52, fontWeight:800, letterSpacing:-1, color:th.text, lineHeight:1, fontVariantNumeric:"tabular-nums" }}>
+              {now.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}
+            </div>
+            <div style={{ fontSize:14, color:th.textMuted, marginTop:4 }}>{String(now.getSeconds()).padStart(2,"0")}s</div>
+            {nextPrayer && (
+              <div style={{ marginTop:12, display:"inline-flex", alignItems:"center", gap:8, background:th.dark?"rgba(64,145,108,0.15)":"rgba(64,145,108,0.1)", borderRadius:100, padding:"6px 14px", border:"1px solid "+(th.dark?"rgba(64,145,108,0.3)":"rgba(64,145,108,0.2)") }}>
+                <div style={{ width:6, height:6, borderRadius:"50%", background:G, animation:"celebGlowPulse 1.2s ease infinite" }}/>
+                <span style={{ fontSize:11, fontWeight:700, color:G }}>{nextPrayer.name} in {fmtCountdown(nextPrayer.raw)}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <PrayerCard label="Today"    islamicDate={idate}    times={todayTimes} currentPrayer={curPrayer} th={th} isMobile={isMobile} isToday={true}  />
+      <PrayerCard label="Tomorrow" islamicDate={idateTom} times={tomTimes}   currentPrayer={null}      th={th} isMobile={isMobile} isToday={false} />
+
+      {/* Verse of the Day */}
+      <div style={{ background:th.surface, borderRadius:20, border:`1.5px solid ${th.border}`, padding:isMobile?"20px":"30px 40px", position:"relative", overflow:"hidden" }}>
+        <div style={{ position:"absolute", top:-50, right:-50, width:180, height:180, borderRadius:"50%", background:th.dark?"rgba(64,145,108,0.05)":"rgba(216,243,220,0.5)", pointerEvents:"none" }}/>
+        {isMobile ? (
+          <div style={{ position:"relative" }}>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:th.textMuted }}>Verse of the Day</div>
+              <div style={{ fontSize:10, color:th.textFaint, fontWeight:500 }}>Day {dayNum} / 365</div>
+            </div>
+            <div style={{ width:"100%", height:1, background:th.border, marginBottom:16 }}/>
+            <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:22, color:th.text, direction:"rtl", textAlign:"right", lineHeight:2, marginBottom:14, fontWeight:400 }}>{verse.a}</div>
+            <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:14, lineHeight:1.8, color:th.text, fontStyle:"italic", marginBottom:10 }}>"{verse.t}"</div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:22, height:2, background:G, borderRadius:1, opacity:0.6 }}/>
+              <div style={{ fontSize:11, color:th.dark?"#40916c":"#7a9a88", fontWeight:600 }}>{verse.r}</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ display:"flex", alignItems:"flex-start", gap:32, position:"relative" }}>
+            <div style={{ flexShrink:0, paddingTop:4 }}>
+              <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:th.textMuted, marginBottom:6, whiteSpace:"nowrap" }}>Verse of the Day</div>
+              <div style={{ fontSize:11, color:th.textFaint, fontWeight:500 }}>Day {dayNum} / 365</div>
+            </div>
+            <div style={{ width:1, background:th.border, alignSelf:"stretch", flexShrink:0 }}/>
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:"'Amiri',Georgia,serif", fontSize:28, color:th.text, direction:"rtl", textAlign:"right", lineHeight:2, marginBottom:16, fontWeight:400 }}>{verse.a}</div>
+              <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:15.5, lineHeight:1.85, color:th.text, fontStyle:"italic", marginBottom:14 }}>"{verse.t}"</div>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                <div style={{ width:28, height:2, background:G, borderRadius:1, opacity:0.6 }}/>
+                <div style={{ fontSize:11.5, color:th.dark?"#40916c":"#7a9a88", fontWeight:600, letterSpacing:0.3 }}>{verse.r}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Calculation method + Madhab */}
+      <div style={{ marginTop:16, display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+        <span style={{ fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:th.textFaint }}>Method</span>
+        {["MWL","ISNA","Egypt","Makkah","Karachi"].map(mt => (
+          <button key={mt} onClick={()=>setMethod(mt)} style={{ padding:"4px 12px", borderRadius:20, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.17s", border:method===mt?"none":`1.5px solid ${th.border2}`, background:method===mt?G:"transparent", color:method===mt?"white":th.textMuted }}>{mt}</button>
+        ))}
+      </div>
+      <div style={{ marginTop:10, display:"flex", alignItems:"center", gap:10 }}>
+        <span style={{ fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:th.textFaint }}>Asr</span>
+        {[{id:"shafii", label:"Shafi'i / Maliki / Hanbali"}, {id:"hanafi", label:"Hanafi"}].map(md => (
+          <button key={md.id} onClick={()=>setMadhab(md.id)} style={{ padding:"4px 12px", borderRadius:20, fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"inherit", transition:"all 0.17s", border:madhab===md.id?"none":`1.5px solid ${th.border2}`, background:madhab===md.id?G:"transparent", color:madhab===md.id?"white":th.textMuted }}>{md.label}</button>
+        ))}
+      </div>
+
+      <div style={{ textAlign:"center", marginTop:28, fontFamily:"'Amiri',Georgia,serif", fontSize:16, color:th.textFaint, letterSpacing:1 }}>
+        بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────── MOBILE DETECT ────────────────────── */
+function useIsMobile() {
+  const check = () => window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const [mobile, setMobile] = useState(check);
+  useEffect(() => {
+    const h = () => setMobile(check());
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return mobile;
+}
+
+/* ─────────────────────── APP ───────────────────────────────── */
+function App() {
+  const saved = load();
+  const [name,         setName]         = useState(saved.name);
+  const [counts,       setCounts]       = useState({...DEFS.counts, ...saved.counts});
+  const [targets,      setTargets]      = useState({...DEFS.targets, ...saved.targets});
+  const [totalSession, setTotalSession] = useState(saved.totalSession);
+  const [isDark,       setIsDark]       = useState(saved.isDark);
+  const [activeId,     setActiveId]     = useState("subhanallah");
+  const [showSettings, setShowSettings] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const [editingName,  setEditingName]  = useState(false);
+  const [nameInput,    setNameInput]    = useState("");
+  const [celebration,  setCelebration]  = useState(null);
+  const [activeTab,    setActiveTab]    = useState("dhikr");
+  const toastRef = useRef();
+  const isMobile = useIsMobile();
+
+  const th     = useMemo(() => mkTheme(isDark), [isDark]);
+  const hadith = useMemo(() => todaysHadith(), []);
+  const dayNum = useMemo(() => getDayOfYear(), []);
+
+  useEffect(() => {
+    document.body.style.background = isDark
+      ? "linear-gradient(160deg,#111009,#0e0c09)"
+      : "linear-gradient(160deg,#f5f1eb,#ede9e2)";
+    document.body.className = th.scrollClass;
+  }, [isDark]);
+
+  useEffect(() => { save({name,counts,targets,totalSession,isDark}); }, [name,counts,targets,totalSession,isDark]);
+
+  useEffect(() => {
+    if (celebration) {
+      const t = setTimeout(() => setCelebration(null), 2850);
+      return () => clearTimeout(t);
+    }
+  }, [celebration]);
+
+  const showToast = msg => {
+    if (toastRef.current) clearTimeout(toastRef.current);
+    setNotification(msg);
+    toastRef.current = setTimeout(() => setNotification(null), 2800);
+  };
+
+  const tap = useCallback(id => {
+    setCounts(prev => {
+      const t = targets[id], nc = prev[id] + 1;
+      if (nc % t === 0) {
+        const d = DHIKR_LIST.find(x => x.id === id), cy = nc / t;
+        setTimeout(() => {
+          showToast(`${d.transliteration} — ${cy} cycle${cy > 1 ? "s" : ""} complete!`);
+          setCelebration({ dhikr: d, cycleNum: cy });
+        }, 0);
+      }
+      return {...prev, [id]: nc};
+    });
+    setTotalSession(n => n + 1);
+  }, [targets]);
+
+  const reset        = useCallback(id => setCounts(p => ({...p, [id]: 0})), []);
+  const resetAll     = () => { setCounts(DEFS.counts); setTotalSession(0); };
+  const updateTarget = useCallback((id, t) => { setTargets(p => ({...p, [id]: t})); setCounts(p => ({...p, [id]: 0})); }, []);
+  const saveName     = () => { const n = nameInput.trim(); if (!n) return; setName(n[0].toUpperCase() + n.slice(1)); setEditingName(false); };
+
+  useEffect(() => {
+    const h = e => {
+      if (e.code === "Space" && !showSettings && !editingName && activeTab === "dhikr" && document.activeElement.tagName !== "INPUT") { e.preventDefault(); tap(activeId); }
+      if (e.key === "Escape") { setShowSettings(false); setEditingName(false); }
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [activeId, tap, showSettings, editingName, activeTab]);
+
+  const totalCycles = DHIKR_LIST.reduce((s, d) => s + Math.floor(counts[d.id] / targets[d.id]), 0);
+
+  if (!name) return <NameSetup onDone={n => setName(n)} th={th} isMobile={isMobile}/>;
+
+  return (
+    <div style={{ minHeight:"100vh", fontFamily:"'Inter',-apple-system,sans-serif", padding:isMobile?"20px 16px 60px":"36px 48px 64px", transition:"color 0.3s ease" }}>
+      <div style={{ maxWidth:isMobile?520:1100, margin:"0 auto" }}>
+
+        {/* ── Header ───────────────────────────────────── */}
+        <div style={{ marginBottom:isMobile?16:24 }}>
+          <div style={{ display:"flex", alignItems:isMobile?"center":"flex-end", justifyContent:"space-between", marginBottom:isMobile?14:0 }}>
+            <div>
+              <div style={{ fontSize:isMobile?12:13, color:th.textMuted, marginBottom:3, fontWeight:500 }}>
+                Assalamu Alaikum,{" "}
+                {editingName ? (
+                  <span style={{ display:"inline-flex", alignItems:"center", gap:6 }}>
+                    <input autoFocus value={nameInput} onChange={e=>setNameInput(e.target.value)}
+                      onKeyDown={e=>{ if(e.key==="Enter")saveName(); if(e.key==="Escape")setEditingName(false); }}
+                      style={{ fontSize:isMobile?12:13, fontWeight:700, color:th.text, border:"none", borderBottom:`2px solid #40916c`, background:"transparent", width:110, fontFamily:"inherit", padding:"0 2px" }}/>
+                    <button onClick={saveName} style={{ fontSize:11, color:"#40916c", fontWeight:700, border:"none", background:"none", cursor:"pointer", fontFamily:"inherit" }}>Save</button>
+                  </span>
+                ) : (
+                  <span onClick={()=>{setNameInput(name);setEditingName(true);}} style={{ color:th.textSub, fontWeight:700, cursor:"pointer", borderBottom:`1.5px dashed ${th.border2}` }} title="Click to change">{name}</span>
+                )}
+              </div>
+              <div style={{ fontSize:isMobile?22:30, fontWeight:800, color:th.text, letterSpacing:isMobile?-0.5:-1, lineHeight:1 }}>Daily Dhikr Tracker</div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:isMobile?0:24 }}>
+              {!isMobile && activeTab === "dhikr" && [
+                {v:totalSession, l:"Session"},
+                {v:totalCycles,  l:"Cycles Done"}
+              ].map((s,i) => (
+                <div key={i} style={{ textAlign:"center" }}>
+                  <div style={{ fontSize:22, fontWeight:800, color:th.text }}>{s.v}</div>
+                  <div style={{ fontSize:10, color:th.textMuted, fontWeight:600, letterSpacing:0.5, textTransform:"uppercase" }}>{s.l}</div>
+                </div>
+              ))}
+              {!isMobile && activeTab === "dhikr" && <div style={{ width:1, height:36, background:th.divider }}/>}
+              <button onClick={()=>setShowSettings(s=>!s)} style={{ width:40, height:40, borderRadius:"50%", border:`1.5px solid ${th.border}`, background:showSettings?th.text:th.surface, color:showSettings?(isDark?"#111":th.surface):th.text, fontSize:16, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", transition:"all 0.22s ease", boxShadow:th.dark?"none":"0 2px 10px rgba(0,0,0,0.07)" }}>
+                ⚙
+              </button>
+            </div>
+          </div>
+          {isMobile && activeTab === "dhikr" && (
+            <div style={{ display:"flex", gap:0, background:th.surface, borderRadius:14, border:`1.5px solid ${th.border}`, overflow:"hidden", marginTop:14 }}>
+              {[{v:totalSession,l:"Session"},{v:totalCycles,l:"Cycles"}].map((s,i) => (
+                <React.Fragment key={i}>
+                  {i>0 && <div style={{ width:1, background:th.border }}/>}
+                  <div style={{ flex:1, textAlign:"center", padding:"10px 0" }}>
+                    <div style={{ fontSize:20, fontWeight:800, color:th.text }}>{s.v}</div>
+                    <div style={{ fontSize:9, color:th.textMuted, fontWeight:600, letterSpacing:0.5, textTransform:"uppercase" }}>{s.l}</div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Tab Bar ──────────────────────────────────── */}
+        <div style={{ display:"flex", gap:4, background:th.surface, borderRadius:14, border:`1.5px solid ${th.border}`, padding:4, marginBottom:isMobile?14:20, boxShadow:th.dark?"none":"0 1px 8px rgba(0,0,0,0.05)" }}>
+          {[
+            { id:"dhikr",  label:"Dhikr",        icon:"📿" },
+            { id:"prayer", label:"Prayer Times",  icon:"🕌" },
+
+            { id:"names",  label:"99 Names",      icon:"★" },
+            { id:"dua",    label:"Du'a",          icon:"🤲" },
+            { id:"qibla",  label:"Qibla",          icon:"🕋" },
+          ].map(tab => {
+            const isAct = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={()=>setActiveTab(tab.id)} style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:isMobile?"10px 8px":"11px 16px", borderRadius:10, border:"none", cursor:"pointer", fontFamily:"inherit", fontSize:isMobile?12:13, fontWeight:700, letterSpacing:0.3, transition:"all 0.22s ease", background:isAct?(isDark?"#1c3828":"#2d6a4f"):"transparent", color:isAct?"white":th.textMuted, boxShadow:isAct?"0 2px 12px rgba(45,106,79,0.25)":"none" }}>
+                <span style={{ fontSize:15 }}>{tab.icon}</span>{tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Settings panel ────────────────────────── */}
+        {showSettings && (
+          <div style={{ background:th.surface, borderRadius:18, padding:isMobile?"16px 18px":"20px 24px", marginBottom:20, boxShadow:th.dark?"0 4px 24px rgba(0,0,0,0.3)":"0 4px 24px rgba(0,0,0,0.07)", border:`1.5px solid ${th.border}`, animation:"slideDown 0.22s ease" }}>
+            <div style={{ display:"flex", flexDirection:isMobile?"column":"row", alignItems:isMobile?"flex-start":"center", justifyContent:"space-between", gap:isMobile?14:32 }}>
+              <div style={{ display:"flex", flexDirection:isMobile?"column":"row", alignItems:isMobile?"flex-start":"center", gap:isMobile?12:20, width:isMobile?"100%":"auto" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, width:isMobile?"100%":"auto" }}>
+                  <span style={{ fontSize:11, fontWeight:700, letterSpacing:0.5, textTransform:"uppercase", color:th.textMuted }}>Dark mode</span>
+                  <Toggle on={isDark} onChange={setIsDark} th={th}/>
+                </div>
+                {!isMobile && <div style={{ width:1, height:24, background:th.border }}/>}
+                {!isMobile && (
+                  <div style={{ fontSize:11, color:th.textMuted, lineHeight:1.7 }}>
+                    Press <kbd style={{ background:th.kbdBg, padding:"2px 7px", borderRadius:5, fontFamily:"monospace", fontSize:11, border:`1px solid ${th.border2}`, color:th.text }}>Space</kbd> to tap the active card. Progress saves automatically.
+                  </div>
+                )}
+              </div>
+              <button onClick={resetAll} style={{ width:isMobile?"100%":"auto", flexShrink:0, padding:"10px 20px", borderRadius:12, border:`1.5px solid ${th.resetBorder}`, background:th.resetBg, color:th.resetText, fontWeight:700, fontSize:12, cursor:"pointer", letterSpacing:0.4, fontFamily:"inherit", whiteSpace:"nowrap" }}>
+                Reset All Counts
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Dhikr Tab Content ─────────────────────── */}
+        {activeTab === "dhikr" && (
+          <div>
+            {/* Hadith of the Day */}
+            <div style={{ background:th.hadithBg, borderRadius:20, padding:isMobile?"20px 20px":"30px 40px", marginBottom:isMobile?16:26, boxShadow:th.dark?"0 1px 0 rgba(255,255,255,0.04)":"0 2px 20px rgba(0,0,0,0.05)", border:`1.5px solid ${th.border}`, position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:-50, right:-50, width:220, height:220, borderRadius:"50%", background:th.dark?"rgba(64,145,108,0.05)":"rgba(216,243,220,0.5)", pointerEvents:"none" }}/>
+              <div style={{ position:"absolute", bottom:-60, left:-20, width:170, height:170, borderRadius:"50%", background:th.dark?"rgba(61,111,204,0.04)":"rgba(207,226,255,0.35)", pointerEvents:"none" }}/>
+              {isMobile ? (
+                <div style={{ position:"relative" }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:th.textMuted }}>Hadith of the Day</div>
+                    <div style={{ fontSize:10, color:th.textFaint, fontWeight:500 }}>Day {dayNum} / 365</div>
+                  </div>
+                  <div style={{ width:"100%", height:1, background:th.border, marginBottom:14 }}/>
+                  <div style={{ fontSize:38, lineHeight:0.5, color:th.hadithQuote, fontFamily:"Georgia,serif", marginBottom:12, opacity:0.18, userSelect:"none" }}>"</div>
+                  <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:14, lineHeight:1.8, color:th.text, fontStyle:"italic", marginBottom:12 }}>{hadith.t}</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                    <div style={{ width:22, height:2, background:th.hadithQuote, borderRadius:1, opacity:0.6, flexShrink:0 }}/>
+                    <div style={{ fontSize:11, color:th.dark?"#40916c":"#7a9a88", fontWeight:600, letterSpacing:0.2, lineHeight:1.4 }}>{hadith.s}</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display:"flex", alignItems:"flex-start", gap:32, position:"relative" }}>
+                  <div style={{ flexShrink:0, paddingTop:4 }}>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:th.textMuted, marginBottom:6, whiteSpace:"nowrap" }}>Hadith of the Day</div>
+                    <div style={{ fontSize:11, color:th.textFaint, fontWeight:500 }}>Day {dayNum} / 365</div>
+                  </div>
+                  <div style={{ width:1, background:th.border, alignSelf:"stretch", flexShrink:0 }}/>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:52, lineHeight:0.5, color:th.hadithQuote, fontFamily:"Georgia,serif", marginBottom:14, opacity:0.2, userSelect:"none" }}>"</div>
+                    <div style={{ fontFamily:"'Lora',Georgia,serif", fontSize:15.5, lineHeight:1.85, color:th.text, fontStyle:"italic", marginBottom:14, maxWidth:780 }}>{hadith.t}</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:28, height:2, background:th.hadithQuote, borderRadius:1, opacity:0.6 }}/>
+                      <div style={{ fontSize:11.5, color:th.dark?"#40916c":"#7a9a88", fontWeight:600, letterSpacing:0.3 }}>{hadith.s}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Dhikr Grid */}
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr", gap:isMobile?12:16, willChange:"contents" }}>
+              {DHIKR_LIST.map((dhikr,i) => (
+                <div key={dhikr.id} style={{ animation:`fadeUp 0.4s ease ${i*0.07}s both` }}>
+                  <DhikrCard
+                    dhikr={dhikr}
+                    count={counts[dhikr.id]}
+                    target={targets[dhikr.id]}
+                    onTap={()=>tap(dhikr.id)}
+                    onReset={()=>reset(dhikr.id)}
+                    onTargetChange={t=>updateTarget(dhikr.id,t)}
+                    isActive={activeId===dhikr.id}
+                    onClick={()=>setActiveId(dhikr.id)}
+                    th={th}
+                    isMobile={isMobile}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{ textAlign:"center", marginTop:34, fontFamily:"'Amiri',Georgia,serif", fontSize:16, color:th.textFaint, letterSpacing:1 }}>
+              بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+            </div>
+          </div>
+        )}
+
+        {/* ── Prayer Times Tab Content ──────────────── */}
+        {activeTab === "prayer" && <PrayerTimesTab th={th} isMobile={isMobile}/>}
+
+        {activeTab === "names" && <NamesOfAllah th={th} isMobile={isMobile}/>}
+        {activeTab === "dua"   && <DuaCollection th={th} isMobile={isMobile}/>}
+        {activeTab === "qibla" && <QiblaFinder th={th} isMobile={isMobile}/>}
+        {activeTab === "duas" && <DuaCollection th={th} isMobile={isMobile}/>}
+
+      </div>
+
+      {/* ── Toast ────────────────────────────────────── */}
+      {notification && (
+        <div style={{ position:"fixed", bottom:28, left:"50%", background:th.toastBg, color:th.toastText, padding:"12px 28px", borderRadius:100, fontSize:13, fontWeight:600, boxShadow:th.dark?"0 8px 36px rgba(0,0,0,0.5)":"0 8px 36px rgba(28,24,18,0.22)", whiteSpace:"nowrap", animation:"toastIn 0.3s ease", zIndex:1000, letterSpacing:0.3, transform:"translateX(-50%)" }}>
+          {notification}
+        </div>
+      )}
+
+      {/* ── Cycle Celebration ────────────────────────── */}
+      {celebration && (
+        <div className="celeb-overlay"
+          style={{ background:`radial-gradient(ellipse at center,${celebration.dhikr.color}f0 0%,${celebration.dhikr.color}c0 35%,${celebration.dhikr.accent}a0 65%,${celebration.dhikr.color}80 100%)` }}
+          onClick={()=>setCelebration(null)}>
+          <svg className="celeb-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+            <defs>
+              <radialGradient id="crg" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={celebration.dhikr.light} stopOpacity="0.35"/>
+                <stop offset="100%" stopColor={celebration.dhikr.light} stopOpacity="0"/>
+              </radialGradient>
+            </defs>
+            <ellipse cx="400" cy="300" rx="320" ry="240" fill="url(#crg)" style={{ animation:"celebGlowPulse 1.4s ease-in-out infinite" }}/>
+            <circle cx="400" cy="300" r="0" fill="none" stroke={celebration.dhikr.light} strokeWidth="3" style={{ animation:"celebRingGrow 2.4s ease-out 0.05s forwards", opacity:0 }}/>
+            <circle cx="400" cy="300" r="0" fill="none" stroke={celebration.dhikr.mid}   strokeWidth="2" style={{ animation:"celebRingGrow2 2.4s ease-out 0.2s forwards",  opacity:0 }}/>
+            <circle cx="400" cy="300" r="0" fill="none" stroke={celebration.dhikr.light} strokeWidth="1" style={{ animation:"celebRingGrow3 2.4s ease-out 0.4s forwards",  opacity:0 }}/>
+            {[0,60,120].map(a => (
+              <g key={a} style={{ transformOrigin:"400px 300px", transform:`rotate(${a}deg)`, opacity:0.2 }}>
+                <line x1="400" y1="80" x2="400" y2="520" stroke={celebration.dhikr.light} strokeWidth="1"/>
+              </g>
+            ))}
+          </svg>
+          <div className="celeb-text-wrap">
+            <div className="celeb-arabic">{celebration.dhikr.arabic}</div>
+            <div className="celeb-divider"/>
+            <div className="celeb-transliteration">{celebration.dhikr.transliteration}</div>
+            <div className="celeb-translation">{celebration.dhikr.translation}</div>
+            <div className="celeb-label">✦ Cycle Complete ✦</div>
+            <div className="celeb-cycles">{celebration.cycleNum} {celebration.cycleNum===1?"cycle":"cycles"} done</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+
+
+
+
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(r => console.log('SW registered'))
+      .catch(e => console.log('SW failed:', e));
+  });
+}
+</script>
+</body>
+</html>
